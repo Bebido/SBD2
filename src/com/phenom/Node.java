@@ -41,13 +41,22 @@ public class Node {
     }
 
     public void add(Rekord rekord){
-        for(Rekord recordIt : rekordList){
-            if(rekord.getKey() < recordIt.getKey()){
-                rekordList.add(rekordList.indexOf(recordIt), rekord);
-                m++;
-                break;
+        if (this.rekordList.size() == 0) {
+            rekordList.add(rekord);
+            m++;
+        } else {
+            for (Rekord recordIt : rekordList) {
+                if (rekord.getKey() < recordIt.getKey()) {
+                    rekordList.add(rekordList.indexOf(recordIt), rekord);
+                    m++;
+                    break;
+                }
             }
         }
+    }
+
+    public void add(Integer pointer){
+        this.pointerList.add(pointer);
     }
 
 
@@ -148,7 +157,7 @@ public class Node {
     private void kompensujZ(Node parentNode, Node siblingNode, boolean isLeftSibling){
         List<Rekord> joinRekordy = new LinkedList<>();
         List<Integer> joinPointers = new LinkedList<>();
-        Integer parentRekordPosition;
+        Integer parentRekordPosition = 0;
         if (isLeftSibling){
             for(Rekord rekord : siblingNode.getRekordList()){
                 joinRekordy.add(rekord);
@@ -191,6 +200,51 @@ public class Node {
             }
         }
 
-        //w listach sa rekordy i adresy do kompensacji
+        int podzial = joinRekordy.size()/2;
+        siblingNode.pointerList = new LinkedList<>();
+        siblingNode.rekordList = new LinkedList<>();
+        siblingNode.m = 0;
+        this.pointerList = new LinkedList<>();
+        this.rekordList = new LinkedList<>();
+        this.m = 0;
+
+        if(isLeftSibling){
+            siblingNode.add(joinPointers.get(0));
+            for (int i = 0; i < podzial; i++){
+                siblingNode.add(joinRekordy.get(i));
+                siblingNode.add(joinPointers.get(i+1));
+            }
+            siblingNode.save();
+
+            parentNode.getRekordList().set(parentRekordPosition, joinRekordy.get(podzial));
+            parentNode.save();
+
+            for(int i = podzial + 1; i < joinRekordy.size(); i++){
+                this.add(joinRekordy.get(i));
+            }
+            for(int i = podzial + 1; i < joinPointers.size(); i++){
+                this.add(joinPointers.get(i));
+            }
+            this.save();
+        } else {
+            this.add(joinPointers.get(0));
+            for (int i = 0; i < podzial; i++){
+                this.add(joinRekordy.get(i));
+                this.add(joinPointers.get(i+1));
+            }
+            this.save();
+
+            parentNode.getRekordList().set(parentRekordPosition, joinRekordy.get(podzial));
+            parentNode.save();
+
+            for(int i = podzial + 1; i < joinRekordy.size(); i++){
+                siblingNode.add(joinRekordy.get(i));
+            }
+            for(int i = podzial + 1; i < joinPointers.size(); i++){
+                siblingNode.add(joinPointers.get(i));
+            }
+            siblingNode.save();
+        }
     }
+
 }
