@@ -150,7 +150,6 @@ public class Node {
             }
         }
         return false;
-
     }
 
 
@@ -246,5 +245,4 @@ public class Node {
             siblingNode.save();
         }
     }
-
 }
