@@ -20,9 +20,11 @@ public class BTree {
                 return true;
             } else {
                 if (currentNode.kompensacja())
-                    return true;
-                //else
-                //rozszczepienie
+                    continue;
+                else {
+                    currentNode.add(rekord);
+                    currentNode = currentNode.split();
+                }
             }
         }
     }
@@ -52,8 +54,8 @@ public class BTree {
         while(currentS != null){
             doSave = false;
             currentNode = new Node(currentS);
-            if (currentNode.parent != parentHelper || currentNode.myAddress != currentS){
-                currentNode.parent = parentHelper;
+            if (currentNode.parentAdress != parentHelper || currentNode.myAddress != currentS){
+                currentNode.parentAdress = parentHelper;
                 currentNode.myAddress = currentS;
                 doSave = true;
             }

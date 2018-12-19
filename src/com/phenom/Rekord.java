@@ -81,4 +81,13 @@ public class Rekord {
         liczba4 = random.nextFloat() * 1000f;
         liczba5 = random.nextFloat() * 1000f;
     }
+
+    public void clone(Rekord rekord) {
+        this.key = rekord.key;
+        this.liczba1 = rekord.getLiczba1();
+        this.liczba2 = rekord.getLiczba2();
+        this.liczba3 = rekord.getLiczba3();
+        this.liczba4 = rekord.getLiczba4();
+        this.liczba5 = rekord.getLiczba5();
+    }
 }
