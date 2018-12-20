@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Node {
+public class Node implements Serializable{
 
     boolean root;
     public int m;
@@ -32,9 +32,14 @@ public class Node {
 
     Node(Integer adress){
 
-        //todo: uchwyt do pliku
-        //todo: jezeli nic nie ma to lub -1 to return null;
         byte[] nodeInBytes = new byte[Globals.getTreeHeader().rekordSize];
+        try {
+            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            dataFile.read(nodeInBytes, adress, Globals.getTreeHeader().rekordSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         ByteArrayInputStream bis = new ByteArrayInputStream(nodeInBytes);
         ObjectInput in = null;
         try {
@@ -56,20 +61,30 @@ public class Node {
     }
 
     public void add(Rekord rekord){
+        boolean added = false;
+
         if (this.rekordList.size() == 0) {
             pointerList.add(-1);
             pointerList.add(-1);
             rekordList.add(rekord);
             m++;
+            added = true;
         } else {
             for (Rekord recordIt : rekordList) {
                 if (rekord.getKey() < recordIt.getKey()) {
                     rekordList.add(rekordList.indexOf(recordIt), rekord);
                     pointerList.add(rekordList.indexOf(recordIt) + 1, -1 );
                     m++;
+                    added = true;
                     break;
                 }
             }
+        }
+
+        if (!added){
+            rekordList.add(rekord);
+            pointerList.add(-1);
+            m++;
         }
     }
 
@@ -127,7 +142,7 @@ public class Node {
                 myAddress = Globals.getTreeHeader().calculateAdress();
             }
 
-            //todo: sprawdzic z headertree.lenght;
+            //Globals.getTreeHeader().rekordSize;//todo: sprawdzic z headertree.lenght;
             dataFile.write(byteNode, myAddress, byteNode.length);
             dataFile.close();
         } catch (Exception e){
@@ -289,20 +304,24 @@ public class Node {
         Rekord middleRekord = new Rekord();
         int middleIndeks = this.m / 2;
         middleRekord.clone(this.rekordList.get(middleIndeks));
+        rekordList.remove(middleIndeks);
 
         createdNode.pointerList.add(this.pointerList.get(0));
         for(int i = 0; i < middleIndeks; i++){
             createdNode.rekordList.add(this.rekordList.get(i));
             createdNode.pointerList.add(this.pointerList.get(i+1));
+            createdNode.m++;
         }
 
-        this.rekordList.remove(0);
+
+        this.pointerList.remove(0);
         for(int i = 0; i < middleIndeks; i++){
             this.rekordList.remove(0);
             this.pointerList.remove(0);
+            m--;
         }
 
-        Node parentNode = null;
+        Node parentNode = null;  //todo: skopiowac parent node
         boolean isRoot = this.root;
         if(isRoot){
             this.root = false;

@@ -1,11 +1,9 @@
 package com.phenom;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 
-public class Globals {
+import java.io.*;
+
+public class Globals implements Serializable {
 
     static final int D = 2;
     static final String DATA_FILE = "dataFile.dat";
@@ -26,8 +24,8 @@ public class Globals {
 
         Node node = new Node();
         node.myAddress = -1;
-        while (node.rekordList.size() < 10)
-            node.add(new Rekord(1));
+        while (node.rekordList.size() < 2*D)
+            node.add(new Rekord(- 1));
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;

@@ -56,7 +56,7 @@ public class BTree {
         Integer parentHelper = null;
         Boolean doSave;
 
-        while(currentS != null){
+        while(currentS != -1){
             doSave = false;
             currentNode = new Node(currentS);
             if (currentNode.parentAdress != parentHelper || currentNode.myAddress != currentS){
