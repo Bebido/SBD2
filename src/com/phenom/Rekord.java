@@ -13,6 +13,7 @@ public class Rekord {
 
     Rekord (int key){
         this.key = key;
+        generateValues();
     }
 
     Float getValue(){
