@@ -2,8 +2,10 @@ package com.phenom;
 
 public class TreeHeader {
 
+    public Integer rekordSize;
     Integer rootAdress;
-    Integer writableAdress;
+    Integer writableAdressTree;
+    Integer writableAdressRekord;
     Integer[] reusableAdresses = new Integer[100];
 
     public Integer getRootAdress() {
@@ -14,12 +16,12 @@ public class TreeHeader {
         this.rootAdress = rootAdress;
     }
 
-    public Integer getWritableAdress() {
-        return writableAdress;
+    public Integer getWritableAdressTree() {
+        return writableAdressTree;
     }
 
-    public void setWritableAdress(Integer writableAdress) {
-        this.writableAdress = writableAdress;
+    public void setWritableAdressTree(Integer writableAdressTree) {
+        this.writableAdressTree = writableAdressTree;
     }
 
     public Integer[] getReusableAdresses() {
@@ -28,5 +30,26 @@ public class TreeHeader {
 
     public void setReusableAdresses(Integer[] reusableAdresses) {
         this.reusableAdresses = reusableAdresses;
+    }
+
+    public Integer calculateAdress() {
+        writableAdressTree = writableAdressTree + rekordSize;
+        return writableAdressTree - rekordSize;
+    }
+
+    public Integer getRekordSize() {
+        return rekordSize;
+    }
+
+    public void setRekordSize(Integer rekordSize) {
+        this.rekordSize = rekordSize;
+    }
+
+    public Integer getWritableAdressRekord() {
+        return writableAdressRekord;
+    }
+
+    public void setWritableAdressRekord(Integer writableAdressRekord) {
+        this.writableAdressRekord = writableAdressRekord;
     }
 }

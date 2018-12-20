@@ -18,6 +18,7 @@ public class Node {
         this.root = false;
         this.m = 0;
         this.d = Globals.D;
+        myAddress = -1;
     }
 
     Node(boolean root){
@@ -25,23 +26,27 @@ public class Node {
             this.root = true;
             this.m = 0;
             this.d = Globals.D;
+            myAddress = -1;
         }
     }
 
     Node(Integer adress){
 
-        ByteArrayInputStream bis = new ByteArrayInputStream(yourBytes);
+        byte[] nodeInBytes = new byte[Globals.getTreeHeader().rekordSize];
+        ByteArrayInputStream bis = new ByteArrayInputStream(nodeInBytes);
         ObjectInput in = null;
         try {
             in = new ObjectInputStream(bis);
             Object o = in.readObject();
-  //
-        } finally {
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+            finally {
             try {
                 if (in != null) {
                     in.close();
                 }
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 // ignore close exception
             }
         }
@@ -50,6 +55,7 @@ public class Node {
 
     public void add(Rekord rekord){
         if (this.rekordList.size() == 0) {
+            pointerList.add(-1);
             pointerList.add(-1);
             rekordList.add(rekord);
             m++;
@@ -93,6 +99,15 @@ public class Node {
             if(Globals.getTreeHeader() == null)
                 Globals.initTreeHeader();
 
+            //maksymalny rozmiar
+
+            while (this.pointerList.size() < 2*d + 1){
+                pointerList.add(-2);
+            }
+            while (this.rekordList.size() < 2*d ){
+                rekordList.add(new Rekord(-2));
+            }
+
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -104,8 +119,14 @@ public class Node {
             byte[] byteNode = bos.toByteArray();
             bos.close();
 
-            //todo: zapis na swoim miejscu
-            dataFile.write(byteNode, Globals.getTreeHeader().writableAdress, byteNode.length);
+            if (myAddress < 0){
+                myAddress = Globals.getTreeHeader().writableAdressTree;
+            } else {
+                myAddress = Globals.getTreeHeader().calculateAdress();
+            }
+
+            //todo: sprawdzic z headertree.lenght;
+            dataFile.write(byteNode, myAddress, byteNode.length);
             dataFile.close();
         } catch (Exception e){
             e.printStackTrace();
