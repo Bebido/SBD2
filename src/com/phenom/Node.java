@@ -32,6 +32,8 @@ public class Node {
 
     Node(Integer adress){
 
+        //todo: uchwyt do pliku
+        //todo: jezeli nic nie ma to lub -1 to return null;
         byte[] nodeInBytes = new byte[Globals.getTreeHeader().rekordSize];
         ByteArrayInputStream bis = new ByteArrayInputStream(nodeInBytes);
         ObjectInput in = null;
@@ -47,7 +49,7 @@ public class Node {
                     in.close();
                 }
             } catch (Exception ex) {
-                // ignore close exception
+                ex.printStackTrace();
             }
         }
 

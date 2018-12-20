@@ -7,7 +7,7 @@ import java.io.ObjectOutputStream;
 
 public class Globals {
 
-    static final int D = 5;
+    static final int D = 2;
     static final String DATA_FILE = "dataFile.dat";
     static final String TREE_FILE = "tree.btree";
     static TreeHeader treeHeader = null;

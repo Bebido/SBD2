@@ -35,11 +35,16 @@ public class BTree {
     }
 
     public Rekord find(Integer key) {
-        Rekord rekord = new Rekord();
+        Rekord rekord = new Rekord(key);
 
         //jesli brak root lub rekord znajduje sie w ostatnio wczytanym wezle
-        if (s == null)
+        if (s == null) {
+            currentNode = new Node();
+            currentNode.root = true;
+            h = 1;
+            s = currentNode.myAddress;
             return null;
+        }
         else if (currentNode != null){
             rekord = currentNode.findRekord(key);
             if (rekord != null){
