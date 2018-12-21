@@ -1,11 +1,12 @@
 package com.phenom;
 
+import java.io.Serializable;
 import java.util.Random;
 
-public class Rekord {
+public class Rekord implements Serializable {
 
-    Integer key;
-    Float liczba1, liczba2, liczba3, liczba4, liczba5;
+    int key;
+    float liczba1, liczba2, liczba3, liczba4, liczba5;
 
     Rekord(){
 

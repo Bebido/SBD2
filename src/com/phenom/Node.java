@@ -4,21 +4,22 @@ import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Node {
+public class Node implements Serializable{
 
     boolean root;
     public int m;
     public int d;
-    public Integer parentAdress;
+    public int parentAdress;
     List<Rekord> rekordList = new LinkedList<>();
-    List<Integer> pointerList = new LinkedList<>();
-    public Integer myAddress;
+    List<RekordAddress> pointerList = new LinkedList<>();
+    public int myAddress;
 
     Node(){
         this.root = false;
         this.m = 0;
         this.d = Globals.D;
         myAddress = -1;
+        parentAdress = -1;
     }
 
     Node(boolean root){
@@ -27,14 +28,20 @@ public class Node {
             this.m = 0;
             this.d = Globals.D;
             myAddress = -1;
+            parentAdress = -1;
         }
     }
 
-    Node(Integer adress){
+    Node(RekordAddress adress){
 
-        //todo: uchwyt do pliku
-        //todo: jezeli nic nie ma to lub -1 to return null;
         byte[] nodeInBytes = new byte[Globals.getTreeHeader().rekordSize];
+        try {
+            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            dataFile.read(nodeInBytes, adress.getValue(), Globals.getTreeHeader().getRekordSize());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         ByteArrayInputStream bis = new ByteArrayInputStream(nodeInBytes);
         ObjectInput in = null;
         try {
@@ -56,24 +63,34 @@ public class Node {
     }
 
     public void add(Rekord rekord){
+        boolean added = false;
+
         if (this.rekordList.size() == 0) {
-            pointerList.add(-1);
-            pointerList.add(-1);
+            pointerList.add(new RekordAddress(-1));
+            pointerList.add(new RekordAddress(-1));
             rekordList.add(rekord);
             m++;
+            added = true;
         } else {
             for (Rekord recordIt : rekordList) {
                 if (rekord.getKey() < recordIt.getKey()) {
                     rekordList.add(rekordList.indexOf(recordIt), rekord);
-                    pointerList.add(rekordList.indexOf(recordIt) + 1, -1 );
+                    pointerList.add(rekordList.indexOf(recordIt) + 1, new RekordAddress(-1));
                     m++;
+                    added = true;
                     break;
                 }
             }
         }
+
+        if (!added){
+            rekordList.add(rekord);
+            pointerList.add(new RekordAddress(-1));
+            m++;
+        }
     }
 
-    public void add(Integer pointer){
+    public void add(RekordAddress pointer){
         this.pointerList.add(pointer);
     }
 
@@ -103,20 +120,22 @@ public class Node {
 
             //maksymalny rozmiar
 
+            int i = -20;
             while (this.pointerList.size() < 2*d + 1){
-                pointerList.add(-2);
+                pointerList.add(new RekordAddress(-1));
             }
             while (this.rekordList.size() < 2*d ){
-                rekordList.add(new Rekord(-2));
+                rekordList.add(new Rekord(-1));
             }
 
+            Node nodeToSave = new Node();
+            nodeToSave.clone(this);
+
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
-
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutput out = null;
+            ObjectOutputStream out = new ObjectOutputStream(bos);
 
-            out = new ObjectOutputStream(bos);
-            out.writeObject(this);
+            out.writeObject(nodeToSave);
             out.flush();
             byte[] byteNode = bos.toByteArray();
             bos.close();
@@ -127,7 +146,7 @@ public class Node {
                 myAddress = Globals.getTreeHeader().calculateAdress();
             }
 
-            //todo: sprawdzic z headertree.lenght;
+            //Globals.getTreeHeader().rekordSize;//todo: sprawdzic z headertree.lenght;
             dataFile.write(byteNode, myAddress, byteNode.length);
             dataFile.close();
         } catch (Exception e){
@@ -135,7 +154,21 @@ public class Node {
         }
     }
 
-    public Integer getSuitPointer(Integer key) {
+    private void clone(Node node) {
+        this.parentAdress = node.parentAdress;
+        this.root = node.root;
+        this.myAddress = node.myAddress;
+        this.m = node.m;
+        this.d = node.d;
+        for (Rekord rekord : node.rekordList){
+            this.rekordList.add(rekord);
+        }
+        for (RekordAddress pointer : node.pointerList){
+            this.pointerList.add(pointer);
+        }
+    }
+
+    public RekordAddress getSuitPointer(Integer key) {
         int i = -1;
         for (Rekord rekord : rekordList){
             i++;
@@ -145,7 +178,7 @@ public class Node {
         return pointerList.get(i);
     }
 
-    public int getM() {
+    public long getM() {
         return m;
     }
 
@@ -153,7 +186,7 @@ public class Node {
         this.m = m;
     }
 
-    public int getD() {
+    public long getD() {
         return d;
     }
 
@@ -162,9 +195,9 @@ public class Node {
     }
 
     public boolean kompensacja() {
-        if (parentAdress == null)
+        if (parentAdress == -1)
             return false;   //root
-        Node parentNode = new Node(parentAdress);
+        Node parentNode = new Node(new RekordAddress(parentAdress));
         Node sibling = null;
         //left sibling
         int myPosition = parentNode.pointerList.indexOf(this.myAddress);
@@ -188,7 +221,7 @@ public class Node {
 
     private void kompensujZ(Node parentNode, Node siblingNode, boolean isLeftSibling){
         List<Rekord> joinRekordy = new LinkedList<>();
-        List<Integer> joinPointers = new LinkedList<>();
+        List<RekordAddress> joinPointers = new LinkedList<>();
         Integer parentRekordPosition = 0;
         if (isLeftSibling){
             for(Rekord rekord : siblingNode.getRekordList()){
@@ -204,10 +237,10 @@ public class Node {
                 joinRekordy.add(rekord);
             }
 
-            for (Integer pointer : siblingNode.pointerList){
+            for (RekordAddress pointer : siblingNode.pointerList){
                 joinPointers.add(pointer);
             }
-            for (Integer pointer : this.pointerList){
+            for (RekordAddress pointer : this.pointerList){
                 joinPointers.add(pointer);
             }
         } else {
@@ -224,10 +257,10 @@ public class Node {
                 joinRekordy.add(rekord);
             }
 
-            for (Integer pointer : this.pointerList){
+            for (RekordAddress pointer : this.pointerList){
                 joinPointers.add(pointer);
             }
-            for (Integer pointer : siblingNode.pointerList){
+            for (RekordAddress pointer : siblingNode.pointerList){
                 joinPointers.add(pointer);
             }
         }
@@ -287,38 +320,42 @@ public class Node {
 
         Node createdNode = new Node();
         Rekord middleRekord = new Rekord();
-        int middleIndeks = this.m / 2;
+        Integer middleIndeks = this.m / 2;
         middleRekord.clone(this.rekordList.get(middleIndeks));
+        rekordList.remove(middleIndeks);
 
         createdNode.pointerList.add(this.pointerList.get(0));
         for(int i = 0; i < middleIndeks; i++){
             createdNode.rekordList.add(this.rekordList.get(i));
             createdNode.pointerList.add(this.pointerList.get(i+1));
+            createdNode.m++;
         }
 
-        this.rekordList.remove(0);
+
+        this.pointerList.remove(0);
         for(int i = 0; i < middleIndeks; i++){
             this.rekordList.remove(0);
             this.pointerList.remove(0);
+            m--;
         }
 
-        Node parentNode = null;
+        Node parentNode = null;  //todo: skopiowac parent node
         boolean isRoot = this.root;
         if(isRoot){
             this.root = false;
             parentNode = new Node();
         } else{
-            parentNode = new Node(this.parentAdress);
+            parentNode = new Node(new RekordAddress(this.parentAdress));
         }
 
         createdNode.save();
         this.save();
 
         parentNode.rekordList.add(middleRekord);
-        parentNode.pointerList.add(rekordList.indexOf(middleRekord), createdNode.myAddress);
+        parentNode.pointerList.add(middleIndeks, new RekordAddress(createdNode.myAddress));
         parentNode.m++;
         if (isRoot)
-            parentNode.pointerList.add(rekordList.indexOf(middleRekord) + 1, this.myAddress);
+            parentNode.pointerList.add(rekordList.indexOf(middleRekord) + 1, new RekordAddress(this.myAddress));
 
         boolean save = true;
         if (parentNode.m > 2*parentNode.d){
