@@ -52,13 +52,13 @@ public class BTree {
             }
         }
 
-        Integer currentS = new Integer(s.intValue());
-        Integer parentHelper = null;
-        Boolean doSave;
+        int currentS = s;
+        int parentHelper = -5;
+        boolean doSave;
 
         while(currentS != -1){
             doSave = false;
-            currentNode = new Node(currentS);
+            currentNode = new Node(new RekordAddress(currentS));
             if (currentNode.parentAdress != parentHelper || currentNode.myAddress != currentS){
                 currentNode.parentAdress = parentHelper;
                 currentNode.myAddress = currentS;
@@ -70,9 +70,9 @@ public class BTree {
                 break;
             //wyszukanie mniejszych lub wiekszych
             else if (key.intValue() < currentNode.rekordList.get(0).getKey())
-                currentS = currentNode.pointerList.get(0);
+                currentS = currentNode.pointerList.get(0).getValue();
             else
-                currentS = currentNode.getSuitPointer(key);
+                currentS = currentNode.getSuitPointer(key).getValue();
             if(doSave)
                 currentNode.save();
         }
