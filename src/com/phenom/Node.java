@@ -1,6 +1,7 @@
 package com.phenom;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,7 +38,9 @@ public class Node implements Serializable{
         byte[] nodeInBytes = new byte[Globals.getTreeHeader().getRekordSize()];
         try {
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
-            dataFile.read(nodeInBytes, adress.getValue(), Globals.getTreeHeader().getRekordSize());
+            dataFile.seek(adress.getValue());
+            dataFile.read(nodeInBytes, 0, nodeInBytes.length);
+            dataFile.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,7 +49,15 @@ public class Node implements Serializable{
         ObjectInput in = null;
         try {
             in = new ObjectInputStream(bis);
-            Object o = in.readObject();
+            Object o = (Node)in.readObject();
+            this.myAddress = ((Node) o).myAddress;
+            this.m = ((Node) o).m;
+            this.pointerList = ((Node) o).pointerList;
+            this.rekordList = ((Node) o).rekordList;
+            this.root = ((Node) o).root;
+            this.parentAdress = ((Node) o).parentAdress;
+            this.d = ((Node) o).d;
+            this.cleanDummyValues();
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -115,9 +126,6 @@ public class Node implements Serializable{
 
     public void save(){
         try  {
-            if(Globals.getTreeHeader() == null)
-                Globals.initTreeHeader();
-
             //maksymalny rozmiar
 
             //int i = -20;
@@ -139,6 +147,7 @@ public class Node implements Serializable{
             out.flush();
             byte[] byteNode = bos.toByteArray();
             bos.close();
+            out.close();
 
             if (myAddress < 0){
                 myAddress = Globals.getTreeHeader().getAddressToSaveTree();
@@ -151,6 +160,7 @@ public class Node implements Serializable{
         } catch (Exception e){
             e.printStackTrace();
         }
+        this.cleanDummyValues();
     }
 
     private void clone(Node node) {
@@ -167,12 +177,12 @@ public class Node implements Serializable{
         }
     }
 
-    public RekordAddress getSuitPointer(Integer key) {
-        int i = -1;
+    public RekordAddress getRightSidePointer(int key) {
+        int i = 0;
         for (Rekord rekord : rekordList){
-            i++;
-            if (key > rekord.getKey())
+            if (key < rekord.getKey() || rekord.getKey() < 0)
                 break;
+            i++;
         }
         return pointerList.get(i);
     }
@@ -341,10 +351,13 @@ public class Node implements Serializable{
             this.root = false;
             parentNode = new Node();
             parentNode.root = true;
+            parentNode.myAddress = Globals.getTreeHeader().getAddressToSaveTree();
+            this.parentAdress = parentNode.myAddress;
         } else{
             parentNode = new Node(new RekordAddress(this.parentAdress));
         }
 
+        createdNode.parentAdress = parentNode.myAddress;
         createdNode.save();
         this.save();
 
@@ -353,11 +366,7 @@ public class Node implements Serializable{
             parentNode.pointerList.add(new RekordAddress(createdNode.myAddress));
             parentNode.pointerList.add(new RekordAddress(this.myAddress));
             parentNode.m++;
-//            if (isRoot)
-  //              parentNode.pointerList.add(rekordList.indexOf(middleRekord) + 1, new RekordAddress(this.myAddress));
-        }
-        else {
-            /// TODO: 2018-12-22
+        } else {
             parentNode.add(middleRekord);
             int rekordPosition = parentNode.rekordList.indexOf(middleRekord);
             parentNode.pointerList.remove(rekordPosition + 1);
@@ -365,14 +374,39 @@ public class Node implements Serializable{
         }
 
         boolean save = true;
-        if (parentNode.m > 2*parentNode.d){
-            parentNode.split();
+        if (parentNode.getM() > 2*parentNode.getD()){
+            parentNode = parentNode.split();
             save = false;
         }
 
         if (save)
             parentNode.save();
+        else
+            parentNode.cleanDummyValues();
 
         return parentNode;
+    }
+
+    public void cleanDummyValues(){
+        List<Rekord> rekordsToRemove = new ArrayList<>();
+        List<RekordAddress> rekordsAddressesToRemove = new ArrayList<>();
+
+        for (Rekord rekord : rekordList){
+            if (rekord.getKey() < -1)
+                rekordsToRemove.add(rekord);
+        }
+
+        for (RekordAddress pointer : pointerList){
+            if (pointer.getValue() < -1)
+                rekordsAddressesToRemove.add(pointer);
+        }
+
+        for (Rekord rekord : rekordsToRemove){
+                rekordList.remove(rekord);
+        }
+
+        for (RekordAddress pointer : rekordsAddressesToRemove){
+                pointerList.remove(pointer);
+        }
     }
 }
