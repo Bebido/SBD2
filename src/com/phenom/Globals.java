@@ -10,6 +10,7 @@ public class Globals implements Serializable {
     static final String TREE_FILE = "tree.btree";
     static TreeHeader treeHeader = null;
     static Integer nodeSize;
+    static Integer treeHeaderSize;
 
     public static void loadTreeHeader(){
         if (treeHeader == null){
@@ -19,15 +20,14 @@ public class Globals implements Serializable {
 
     public static void initTreeHeader(){
         treeHeader = new TreeHeader();
-        treeHeader.rootAdress = null;
-        treeHeader.writableAdressTree = 0;
+        treeHeader.setRootAdress(-1);
+        treeHeader.setWritableAddressTree(0);
 
         Node node = new Node();
         node.myAddress = -1;
         node.parentAdress = -1;
-        int i = 1;
         while (node.rekordList.size() < 2*D)
-            node.add(new Rekord(i++));
+            node.add(new Rekord(-1));
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;
@@ -38,11 +38,15 @@ public class Globals implements Serializable {
             out.flush();
             byte[] byteNode = bos.toByteArray();
             bos.close();
-            treeHeader.rekordSize = byteNode.length;
+            treeHeader.setRekordSize(byteNode.length);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        treeHeaderSize = treeHeader.calculateSize();
+        treeHeader.setWritableAddressTree(treeHeaderSize);
+
+        treeHeader.save();
     }
 
     public static TreeHeader getTreeHeader() {
