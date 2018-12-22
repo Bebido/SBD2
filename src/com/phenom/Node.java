@@ -1,6 +1,7 @@
 package com.phenom;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,10 +35,12 @@ public class Node implements Serializable{
 
     Node(RekordAddress adress){
 
-        byte[] nodeInBytes = new byte[Globals.getTreeHeader().rekordSize];
+        byte[] nodeInBytes = new byte[Globals.getTreeHeader().getRekordSize()];
         try {
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
-            dataFile.read(nodeInBytes, adress.getValue(), Globals.getTreeHeader().getRekordSize());
+            dataFile.seek(adress.getValue());
+            dataFile.read(nodeInBytes, 0, nodeInBytes.length);
+            dataFile.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,7 +49,15 @@ public class Node implements Serializable{
         ObjectInput in = null;
         try {
             in = new ObjectInputStream(bis);
-            Object o = in.readObject();
+            Object o = (Node)in.readObject();
+            this.myAddress = ((Node) o).myAddress;
+            this.m = ((Node) o).m;
+            this.pointerList = ((Node) o).pointerList;
+            this.rekordList = ((Node) o).rekordList;
+            this.root = ((Node) o).root;
+            this.parentAdress = ((Node) o).parentAdress;
+            this.d = ((Node) o).d;
+            this.cleanDummyValues();
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -73,7 +84,7 @@ public class Node implements Serializable{
             added = true;
         } else {
             for (Rekord recordIt : rekordList) {
-                if (rekord.getKey() < recordIt.getKey()) {
+                if (rekord.getKey() < recordIt.getKey() || recordIt.getKey() < 0) {
                     rekordList.add(rekordList.indexOf(recordIt), rekord);
                     pointerList.add(rekordList.indexOf(recordIt) + 1, new RekordAddress(-1));
                     m++;
@@ -115,17 +126,14 @@ public class Node implements Serializable{
 
     public void save(){
         try  {
-            if(Globals.getTreeHeader() == null)
-                Globals.initTreeHeader();
-
             //maksymalny rozmiar
 
-            int i = -20;
+            //int i = -20;
             while (this.pointerList.size() < 2*d + 1){
-                pointerList.add(new RekordAddress(-1));
+                pointerList.add(new RekordAddress(-2));
             }
             while (this.rekordList.size() < 2*d ){
-                rekordList.add(new Rekord(-1));
+                rekordList.add(new Rekord(-2));
             }
 
             Node nodeToSave = new Node();
@@ -139,19 +147,20 @@ public class Node implements Serializable{
             out.flush();
             byte[] byteNode = bos.toByteArray();
             bos.close();
+            out.close();
 
             if (myAddress < 0){
-                myAddress = Globals.getTreeHeader().writableAdressTree;
-            } else {
-                myAddress = Globals.getTreeHeader().calculateAdress();
+                myAddress = Globals.getTreeHeader().getAddressToSaveTree();
             }
 
-            //Globals.getTreeHeader().rekordSize;//todo: sprawdzic z headertree.lenght;
-            dataFile.write(byteNode, myAddress, byteNode.length);
+            //Globals.getTreeHeader().getRekordSize();//todo: sprawdzic z headertree.lenght;
+            dataFile.seek(myAddress);
+            dataFile.write(byteNode, 0, byteNode.length);
             dataFile.close();
         } catch (Exception e){
             e.printStackTrace();
         }
+        this.cleanDummyValues();
     }
 
     private void clone(Node node) {
@@ -168,12 +177,12 @@ public class Node implements Serializable{
         }
     }
 
-    public RekordAddress getSuitPointer(Integer key) {
-        int i = -1;
+    public RekordAddress getRightSidePointer(int key) {
+        int i = 0;
         for (Rekord rekord : rekordList){
-            i++;
-            if (key > rekord.getKey())
+            if (key < rekord.getKey() || rekord.getKey() < 0)
                 break;
+            i++;
         }
         return pointerList.get(i);
     }
@@ -322,7 +331,6 @@ public class Node implements Serializable{
         Rekord middleRekord = new Rekord();
         Integer middleIndeks = this.m / 2;
         middleRekord.clone(this.rekordList.get(middleIndeks));
-        rekordList.remove(middleIndeks);
 
         createdNode.pointerList.add(this.pointerList.get(0));
         for(int i = 0; i < middleIndeks; i++){
@@ -331,41 +339,74 @@ public class Node implements Serializable{
             createdNode.m++;
         }
 
-
-        this.pointerList.remove(0);
-        for(int i = 0; i < middleIndeks; i++){
+        for(int i = 0; i <= middleIndeks; i++){
             this.rekordList.remove(0);
             this.pointerList.remove(0);
             m--;
         }
 
-        Node parentNode = null;  //todo: skopiowac parent node
+        Node parentNode = null;
         boolean isRoot = this.root;
         if(isRoot){
             this.root = false;
             parentNode = new Node();
+            parentNode.root = true;
+            parentNode.myAddress = Globals.getTreeHeader().getAddressToSaveTree();
+            this.parentAdress = parentNode.myAddress;
         } else{
             parentNode = new Node(new RekordAddress(this.parentAdress));
         }
 
+        createdNode.parentAdress = parentNode.myAddress;
         createdNode.save();
         this.save();
 
-        parentNode.rekordList.add(middleRekord);
-        parentNode.pointerList.add(middleIndeks, new RekordAddress(createdNode.myAddress));
-        parentNode.m++;
-        if (isRoot)
-            parentNode.pointerList.add(rekordList.indexOf(middleRekord) + 1, new RekordAddress(this.myAddress));
+        if(isRoot) {
+            parentNode.rekordList.add(middleRekord);
+            parentNode.pointerList.add(new RekordAddress(createdNode.myAddress));
+            parentNode.pointerList.add(new RekordAddress(this.myAddress));
+            parentNode.m++;
+        } else {
+            parentNode.add(middleRekord);
+            int rekordPosition = parentNode.rekordList.indexOf(middleRekord);
+            parentNode.pointerList.remove(rekordPosition + 1);
+            parentNode.pointerList.add(rekordPosition, new RekordAddress(createdNode.myAddress));
+        }
 
         boolean save = true;
-        if (parentNode.m > 2*parentNode.d){
-            parentNode.split();
+        if (parentNode.getM() > 2*parentNode.getD()){
+            parentNode = parentNode.split();
             save = false;
         }
 
         if (save)
             parentNode.save();
+        else
+            parentNode.cleanDummyValues();
 
         return parentNode;
+    }
+
+    public void cleanDummyValues(){
+        List<Rekord> rekordsToRemove = new ArrayList<>();
+        List<RekordAddress> rekordsAddressesToRemove = new ArrayList<>();
+
+        for (Rekord rekord : rekordList){
+            if (rekord.getKey() < -1)
+                rekordsToRemove.add(rekord);
+        }
+
+        for (RekordAddress pointer : pointerList){
+            if (pointer.getValue() < -1)
+                rekordsAddressesToRemove.add(pointer);
+        }
+
+        for (Rekord rekord : rekordsToRemove){
+                rekordList.remove(rekord);
+        }
+
+        for (RekordAddress pointer : rekordsAddressesToRemove){
+                pointerList.remove(pointer);
+        }
     }
 }

@@ -12,6 +12,9 @@ public class Main {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String text;
         Integer argument;
+        ///tutaj z pliku bedzie inaczej
+        if(Globals.getTreeHeader() == null)
+            Globals.initTreeHeader();
         BTree bTree = new BTree();
 
         while (going){

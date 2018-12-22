@@ -17,6 +17,7 @@ public class BTree {
         while(true) {
             if (currentNode.getM() < 2 * currentNode.getD()) {
                 currentNode.add(rekord);
+                currentNode.save();
                 return true;
             } else {
                 if (currentNode.kompensacja())
@@ -24,14 +25,12 @@ public class BTree {
                 else {
                     currentNode.add(rekord);
                     currentNode = currentNode.split();
+                    if (currentNode.root){
+
+                    }
                 }
             }
         }
-    }
-
-    private void addFirstRekord(Rekord rekord) {
-        Node root = new Node();
-        //TODO: wszystko
     }
 
     public Rekord find(Integer key) {
@@ -42,39 +41,39 @@ public class BTree {
             currentNode = new Node();
             currentNode.root = true;
             h = 1;
+            currentNode.myAddress = Globals.getTreeHeader().getAddressToSaveTree();
             s = currentNode.myAddress;
+            currentNode.save();
             return null;
         }
-        else if (currentNode != null){
-            rekord = currentNode.findRekord(key);
-            if (rekord != null){
-                return rekord;
-            }
-        }
+//        else if (currentNode != null){
+//            rekord = currentNode.findRekord(key);
+//            if (rekord != null){
+//                return rekord;
+//            }
+//        }
 
-        int currentS = s;
+        // wczytywanie od root
+        int currentS = s.intValue();
         int parentHelper = -5;
-        boolean doSave;
+        //boolean doSave;
 
         while(currentS != -1){
-            doSave = false;
+            //doSave = false;
             currentNode = new Node(new RekordAddress(currentS));
-            if (currentNode.parentAdress != parentHelper || currentNode.myAddress != currentS){
-                currentNode.parentAdress = parentHelper;
-                currentNode.myAddress = currentS;
-                doSave = true;
-            }
+//            if (currentNode.parentAdress != parentHelper){
+//                currentNode.parentAdress = parentHelper;
+//                currentNode.save();
+//            }
             parentHelper = currentS;
             rekord = currentNode.findRekord(key);
             if (rekord != null)
                 break;
             //wyszukanie mniejszych lub wiekszych
-            else if (key.intValue() < currentNode.rekordList.get(0).getKey())
+            else if (currentNode.rekordList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordList.get(0).getKey())
                 currentS = currentNode.pointerList.get(0).getValue();
             else
-                currentS = currentNode.getSuitPointer(key).getValue();
-            if(doSave)
-                currentNode.save();
+                currentS = currentNode.getRightSidePointer(key.intValue()).getValue();
         }
 
         return rekord;
