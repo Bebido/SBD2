@@ -2,11 +2,11 @@ package com.phenom;
 
 import java.io.Serializable;
 
-public class RekordAddress implements Serializable {
+public class NodesAddress implements Serializable {
 
     int value;
 
-    RekordAddress(int address){
+    NodesAddress(int address){
         this.value = address;
     }
 

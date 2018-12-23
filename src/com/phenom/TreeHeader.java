@@ -102,7 +102,7 @@ public class TreeHeader implements Serializable {
 
     public void save() {
         try  {
-            RandomAccessFile dataFile = new RandomAccessFile(Globals.TREE_FILE, "rw");
+            RandomAccessFile treeFile = new RandomAccessFile(Globals.TREE_FILE, "rw");
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(bos);
 
@@ -111,8 +111,8 @@ public class TreeHeader implements Serializable {
             byte[] byteNode = bos.toByteArray();
             bos.close();
 
-            dataFile.write(byteNode, 0, byteNode.length);
-            dataFile.close();
+            treeFile.write(byteNode, 0, byteNode.length);
+            treeFile.close();
         } catch (Exception e){
             e.printStackTrace();
         }

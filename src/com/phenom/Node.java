@@ -12,7 +12,7 @@ public class Node implements Serializable{
     public int d;
     public int parentAdress;
     List<Rekord> rekordList = new LinkedList<>();
-    List<RekordAddress> pointerList = new LinkedList<>();
+    List<NodesAddress> pointerList = new LinkedList<>();
     public int myAddress;
 
     Node(){
@@ -33,14 +33,14 @@ public class Node implements Serializable{
         }
     }
 
-    Node(RekordAddress adress){
+    Node(NodesAddress adress){
 
         byte[] nodeInBytes = new byte[Globals.getTreeHeader().getNodeSize()];
         try {
-            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
-            dataFile.seek(adress.getValue());
-            dataFile.read(nodeInBytes, 0, nodeInBytes.length);
-            dataFile.close();
+            RandomAccessFile treeFile = new RandomAccessFile(Globals.TREE_FILE, "rw");
+            treeFile.seek(adress.getValue());
+            treeFile.read(nodeInBytes, 0, nodeInBytes.length);
+            treeFile.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,8 +77,8 @@ public class Node implements Serializable{
         boolean added = false;
 
         if (this.rekordList.size() == 0) {
-            pointerList.add(new RekordAddress(-1));
-            pointerList.add(new RekordAddress(-1));
+            pointerList.add(new NodesAddress(-1));
+            pointerList.add(new NodesAddress(-1));
             rekordList.add(rekord);
             m++;
             added = true;
@@ -92,7 +92,7 @@ public class Node implements Serializable{
             }
             if (position >= 0){
                 rekordList.add(position, rekord);
-                pointerList.add(position + 1, new RekordAddress(-1));
+                pointerList.add(position + 1, new NodesAddress(-1));
                 m++;
                 added = true;
             }
@@ -100,12 +100,12 @@ public class Node implements Serializable{
 
         if (!added){
             rekordList.add(rekord);
-            pointerList.add(new RekordAddress(-1));
+            pointerList.add(new NodesAddress(-1));
             m++;
         }
     }
 
-    public void add(RekordAddress pointer){
+    public void add(NodesAddress pointer){
         this.pointerList.add(pointer);
     }
 
@@ -132,7 +132,7 @@ public class Node implements Serializable{
         try  {
 
             while (this.pointerList.size() < 2*d + 1){
-                pointerList.add(new RekordAddress(-2));
+                pointerList.add(new NodesAddress(-2));
             }
             while (this.rekordList.size() < 2*d ){
                 rekordList.add(new Rekord(-2));
@@ -142,7 +142,7 @@ public class Node implements Serializable{
                 myAddress = Globals.getTreeHeader().getAddressToSaveTree();
             }
 
-            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            RandomAccessFile treeFile = new RandomAccessFile(Globals.TREE_FILE, "rw");
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(bos);
 
@@ -152,9 +152,9 @@ public class Node implements Serializable{
             bos.close();
             out.close();
 
-            dataFile.seek(myAddress);
-            dataFile.write(byteNode, 0, Globals.getTreeHeader().getNodeSize());
-            dataFile.close();
+            treeFile.seek(myAddress);
+            treeFile.write(byteNode, 0, Globals.getTreeHeader().getNodeSize());
+            treeFile.close();
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -170,12 +170,12 @@ public class Node implements Serializable{
         for (Rekord rekord : node.rekordList){
             this.rekordList.add(rekord);
         }
-        for (RekordAddress pointer : node.pointerList){
+        for (NodesAddress pointer : node.pointerList){
             this.pointerList.add(pointer);
         }
     }
 
-    public RekordAddress getRightSidePointer(int key) {
+    public NodesAddress getRightSidePointer(int key) {
         int i = 0;
         for (Rekord rekord : rekordList){
             if (key < rekord.getKey() || rekord.getKey() < 0)
@@ -204,11 +204,11 @@ public class Node implements Serializable{
     public boolean kompensacja() {
         if (parentAdress < 0)
             return false;   //root
-        Node parentNode = new Node(new RekordAddress(parentAdress));
+        Node parentNode = new Node(new NodesAddress(parentAdress));
         Node sibling = null;
         //left sibling
         int myPosition = 0;
-        for (RekordAddress pointer : parentNode.pointerList){
+        for (NodesAddress pointer : parentNode.pointerList){
             if (pointer.getValue() == this.myAddress){
                 break;
             }
@@ -234,7 +234,7 @@ public class Node implements Serializable{
 
     private void kompensujZ(Node parentNode, Node siblingNode, boolean isLeftSibling){
         List<Rekord> joinRekordy = new LinkedList<>();
-        List<RekordAddress> joinPointers = new LinkedList<>();
+        List<NodesAddress> joinPointers = new LinkedList<>();
         Integer parentRekordPosition = 0;
         if (isLeftSibling){
             for(Rekord rekord : siblingNode.getRekordList()){
@@ -250,10 +250,10 @@ public class Node implements Serializable{
                 joinRekordy.add(rekord);
             }
 
-            for (RekordAddress pointer : siblingNode.pointerList){
+            for (NodesAddress pointer : siblingNode.pointerList){
                 joinPointers.add(pointer);
             }
-            for (RekordAddress pointer : this.pointerList){
+            for (NodesAddress pointer : this.pointerList){
                 joinPointers.add(pointer);
             }
         } else {
@@ -270,10 +270,10 @@ public class Node implements Serializable{
                 joinRekordy.add(rekord);
             }
 
-            for (RekordAddress pointer : this.pointerList){
+            for (NodesAddress pointer : this.pointerList){
                 joinPointers.add(pointer);
             }
-            for (RekordAddress pointer : siblingNode.pointerList){
+            for (NodesAddress pointer : siblingNode.pointerList){
                 joinPointers.add(pointer);
             }
         }
@@ -358,7 +358,7 @@ public class Node implements Serializable{
             parentNode.myAddress = Globals.getTreeHeader().getAddressToSaveTree();
             this.parentAdress = parentNode.myAddress;
         } else{
-            parentNode = new Node(new RekordAddress(this.parentAdress));
+            parentNode = new Node(new NodesAddress(this.parentAdress));
         }
 
         createdNode.parentAdress = parentNode.myAddress;
@@ -367,14 +367,14 @@ public class Node implements Serializable{
 
         if(isRoot) {
             parentNode.rekordList.add(middleRekord);
-            parentNode.pointerList.add(new RekordAddress(createdNode.myAddress));
-            parentNode.pointerList.add(new RekordAddress(this.myAddress));
+            parentNode.pointerList.add(new NodesAddress(createdNode.myAddress));
+            parentNode.pointerList.add(new NodesAddress(this.myAddress));
             parentNode.m++;
         } else {
             parentNode.add(middleRekord);
             int rekordPosition = parentNode.rekordList.indexOf(middleRekord);
             parentNode.pointerList.remove(rekordPosition + 1);
-            parentNode.pointerList.add(rekordPosition, new RekordAddress(createdNode.myAddress));
+            parentNode.pointerList.add(rekordPosition, new NodesAddress(createdNode.myAddress));
         }
 
         boolean save = true;
@@ -393,14 +393,14 @@ public class Node implements Serializable{
 
     public void cleanDummyValues(){
         List<Rekord> rekordsToRemove = new ArrayList<>();
-        List<RekordAddress> rekordsAddressesToRemove = new ArrayList<>();
+        List<NodesAddress> rekordsAddressesToRemove = new ArrayList<>();
 
         for (Rekord rekord : rekordList){
             if (rekord.getKey() < -1)
                 rekordsToRemove.add(rekord);
         }
 
-        for (RekordAddress pointer : pointerList){
+        for (NodesAddress pointer : pointerList){
             if (pointer.getValue() < -1)
                 rekordsAddressesToRemove.add(pointer);
         }
@@ -409,7 +409,7 @@ public class Node implements Serializable{
                 rekordList.remove(rekord);
         }
 
-        for (RekordAddress pointer : rekordsAddressesToRemove){
+        for (NodesAddress pointer : rekordsAddressesToRemove){
                 pointerList.remove(pointer);
         }
     }

@@ -62,7 +62,7 @@ public class BTree {
 
         while(currentS != -1){
             //doSave = false;
-            currentNode = new Node(new RekordAddress(currentS));
+            currentNode = new Node(new NodesAddress(currentS));
             parentHelper = currentS;
             rekord = currentNode.findRekord(key);
             if (rekord != null)
@@ -79,14 +79,14 @@ public class BTree {
 
     public void display() {
         int currentS = s.intValue();
-        List<RekordAddress> addressesToDisplay = new LinkedList<>();
-        addressesToDisplay.add(new RekordAddress(-20));
+        List<NodesAddress> addressesToDisplay = new LinkedList<>();
+        addressesToDisplay.add(new NodesAddress(-20));
 
         while(currentS > 0) {
             //doSave = false;
-            currentNode = new Node(new RekordAddress(currentS));
+            currentNode = new Node(new NodesAddress(currentS));
             System.out.print(currentNode.toString());
-            for (RekordAddress pointer : currentNode.pointerList){
+            for (NodesAddress pointer : currentNode.pointerList){
                 if (pointer.getValue() > 0)
                     addressesToDisplay.add(pointer);
             }
@@ -99,7 +99,7 @@ public class BTree {
                         break;
                     currentS = addressesToDisplay.get(0).getValue();
                     if (addressesToDisplay.size() > 0){
-                        addressesToDisplay.add(new RekordAddress(-20));
+                        addressesToDisplay.add(new NodesAddress(-20));
                     }
                 }
                 addressesToDisplay.remove(0);
