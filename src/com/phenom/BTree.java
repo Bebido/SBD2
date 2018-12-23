@@ -1,5 +1,8 @@
 package com.phenom;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class BTree {
 
     int h = 0;
@@ -7,31 +10,30 @@ public class BTree {
 
     Node currentNode = null;
 
-    public boolean add(int key){
+    public boolean add(int key) {
 
         Rekord rekord = find(key);
         if (rekord != null)
             return false;   //rekord istnieje w pliku
 
         rekord = new Rekord(key);
-        while(true) {
-            if (currentNode.getM() < 2 * currentNode.getD()) {
-                currentNode.add(rekord);
-                currentNode.save();
+        currentNode.add(rekord);
+        if (currentNode.getM() <= 2 * currentNode.getD()) {
+            currentNode.save();
+            return true;
+        } else {
+            if (currentNode.kompensacja())
                 return true;
-            } else {
-                if (currentNode.kompensacja())
-                    continue;
-                else {
-                    currentNode.add(rekord);
-                    currentNode = currentNode.split();
-                    if (currentNode.root){
-
-                    }
+            else {
+                currentNode = currentNode.split();
+                if (currentNode.root) {
+                    s = currentNode.myAddress;
                 }
+                return true;
             }
         }
     }
+
 
     public Rekord find(Integer key) {
         Rekord rekord = new Rekord(key);
@@ -77,5 +79,37 @@ public class BTree {
         }
 
         return rekord;
+    }
+
+    public void display() {
+        int currentS = s.intValue();
+        List<RekordAddress> addressesToDisplay = new LinkedList<>();
+        addressesToDisplay.add(new RekordAddress(-20));
+
+        while(currentS > 0) {
+            //doSave = false;
+            currentNode = new Node(new RekordAddress(currentS));
+            System.out.print(currentNode.toString());
+            for (RekordAddress pointer : currentNode.pointerList){
+                if (pointer.getValue() > 0)
+                    addressesToDisplay.add(pointer);
+            }
+            if (addressesToDisplay.size() > 0) {
+                currentS = addressesToDisplay.get(0).getValue();
+                if (currentS == -20){
+                    System.out.println();
+                    addressesToDisplay.remove(0);
+                    if(addressesToDisplay.size() == 0)
+                        break;
+                    currentS = addressesToDisplay.get(0).getValue();
+                    if (addressesToDisplay.size() > 0){
+                        addressesToDisplay.add(new RekordAddress(-20));
+                    }
+                }
+                addressesToDisplay.remove(0);
+            } else {
+                currentS = -1;
+            }
+        }
     }
 }

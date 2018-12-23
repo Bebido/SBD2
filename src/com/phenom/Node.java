@@ -83,14 +83,18 @@ public class Node implements Serializable{
             m++;
             added = true;
         } else {
+            int position = -1;
             for (Rekord recordIt : rekordList) {
                 if (rekord.getKey() < recordIt.getKey() || recordIt.getKey() < 0) {
-                    rekordList.add(rekordList.indexOf(recordIt), rekord);
-                    pointerList.add(rekordList.indexOf(recordIt) + 1, new RekordAddress(-1));
-                    m++;
-                    added = true;
+                    position = rekordList.indexOf(recordIt);
                     break;
                 }
+            }
+            if (position >= 0){
+                rekordList.add(position, rekord);
+                pointerList.add(position + 1, new RekordAddress(-1));
+                m++;
+                added = true;
             }
         }
 
@@ -136,26 +140,27 @@ public class Node implements Serializable{
                 rekordList.add(new Rekord(-2));
             }
 
-            Node nodeToSave = new Node();
-            nodeToSave.clone(this);
+            if (myAddress < 0){
+                myAddress = Globals.getTreeHeader().getAddressToSaveTree();
+            }
+//            Node nodeToSave = new Node();
+//            nodeToSave.clone(this);
 
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(bos);
 
-            out.writeObject(nodeToSave);
+            out.writeObject(this);
             out.flush();
             byte[] byteNode = bos.toByteArray();
             bos.close();
             out.close();
 
-            if (myAddress < 0){
-                myAddress = Globals.getTreeHeader().getAddressToSaveTree();
-            }
+
 
             //Globals.getTreeHeader().getRekordSize();//todo: sprawdzic z headertree.lenght;
             dataFile.seek(myAddress);
-            dataFile.write(byteNode, 0, byteNode.length);
+            dataFile.write(byteNode, 0, Globals.getTreeHeader().getRekordSize());
             dataFile.close();
         } catch (Exception e){
             e.printStackTrace();
@@ -204,20 +209,26 @@ public class Node implements Serializable{
     }
 
     public boolean kompensacja() {
-        if (parentAdress == -1)
+        if (parentAdress < 0)
             return false;   //root
         Node parentNode = new Node(new RekordAddress(parentAdress));
         Node sibling = null;
         //left sibling
-        int myPosition = parentNode.pointerList.indexOf(this.myAddress);
-        if (myPosition > 0 && parentNode.pointerList.get(myPosition - 1) != null){
+        int myPosition = 0;
+        for (RekordAddress pointer : parentNode.pointerList){
+            if (pointer.getValue() == this.myAddress){
+                break;
+            }
+            myPosition++;
+        }
+        if (myPosition > 0 && parentNode.pointerList.get(myPosition - 1).getValue() > 0){
             sibling = new Node(parentNode.pointerList.get(myPosition - 1 ));
             if (sibling.m < 2*sibling.d) {
                 kompensujZ(parentNode, sibling, true);
                 return true;
             }
         }
-        if (myPosition < 2*d && parentNode.pointerList.get(myPosition + 1) != null){
+        if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
             sibling = new Node(parentNode.pointerList.get(myPosition + 1));
             if (sibling.m < 2*sibling.d){
                 kompensujZ(parentNode, sibling, false);
@@ -285,9 +296,9 @@ public class Node implements Serializable{
         if(isLeftSibling){
             siblingNode.add(joinPointers.get(0));
             for (int i = 0; i < podzial; i++){
-                siblingNode.add(joinRekordy.get(i));
-                siblingNode.pointerList.remove(pointerList.size());
-                siblingNode.add(joinPointers.get(i+1));
+                siblingNode.rekordList.add(joinRekordy.get(i));
+                siblingNode.pointerList.add(joinPointers.get(i+1));
+                siblingNode.m++;
             }
             siblingNode.save();
 
@@ -295,19 +306,19 @@ public class Node implements Serializable{
             parentNode.save();
 
             for(int i = podzial + 1; i < joinRekordy.size(); i++){
-                this.add(joinRekordy.get(i));
-                this.pointerList.remove(pointerList.size());
+                this.rekordList.add(joinRekordy.get(i));
+                this.m++;
             }
             for(int i = podzial + 1; i < joinPointers.size(); i++){
-                this.add(joinPointers.get(i));
+                this.pointerList.add(joinPointers.get(i));
             }
             this.save();
         } else {
-            this.add(joinPointers.get(0));
+            this.pointerList.add(joinPointers.get(0));
             for (int i = 0; i < podzial; i++){
-                this.add(joinRekordy.get(i));
-                this.pointerList.remove(pointerList.size());
-                this.add(joinPointers.get(i+1));
+                this.rekordList.add(joinRekordy.get(i));
+                this.pointerList.add(joinPointers.get(i+1));
+                this.m++;
             }
             this.save();
 
@@ -315,11 +326,11 @@ public class Node implements Serializable{
             parentNode.save();
 
             for(int i = podzial + 1; i < joinRekordy.size(); i++){
-                siblingNode.add(joinRekordy.get(i));
-                siblingNode.pointerList.remove(pointerList.size());
+                siblingNode.rekordList.add(joinRekordy.get(i));
+                siblingNode.m++;
             }
             for(int i = podzial + 1; i < joinPointers.size(); i++){
-                siblingNode.add(joinPointers.get(i));
+                siblingNode.pointerList.add(joinPointers.get(i));
             }
             siblingNode.save();
         }
@@ -408,5 +419,15 @@ public class Node implements Serializable{
         for (RekordAddress pointer : rekordsAddressesToRemove){
                 pointerList.remove(pointer);
         }
+    }
+
+    @Override
+    public String toString() {
+        String textNode = " ";
+        for(int i = 0; i < rekordList.size(); i++){
+            textNode = textNode + "|" +pointerList.get(i).getValue() + "|" + rekordList.get(i).getKey();
+        }
+        textNode = textNode + "|" + pointerList.get(pointerList.size() - 1).getValue() + "| ";
+        return textNode;
     }
 }
