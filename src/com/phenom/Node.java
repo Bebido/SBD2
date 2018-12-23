@@ -14,6 +14,7 @@ public class Node implements Serializable{
     List<RekordNode> rekordNodeList = new LinkedList<>();
     List<NodesAddress> pointerList = new LinkedList<>();
     public int myAddress;
+    boolean deleted;
 
     Node(){
         this.root = false;
@@ -21,6 +22,7 @@ public class Node implements Serializable{
         this.d = Globals.D;
         myAddress = -1;
         parentAdress = -1;
+        deleted = false;
     }
 
     Node(boolean root){
@@ -30,6 +32,7 @@ public class Node implements Serializable{
             this.d = Globals.D;
             myAddress = -1;
             parentAdress = -1;
+            deleted = false;
         }
     }
 
@@ -244,6 +247,7 @@ public class Node implements Serializable{
                 if (rekordNode.getKey() > ((LinkedList<RekordNode>) joinRekordy).getLast().getKey()){
                     joinRekordy.add(rekordNode);
                     parentRekordPosition = parentNode.getRekordNodeList().indexOf(rekordNode);
+                    break;
                 }
             }
             for(RekordNode rekordNode : this.getRekordNodeList()){
@@ -422,5 +426,163 @@ public class Node implements Serializable{
         }
         textNode = textNode + "|" + pointerList.get(pointerList.size() - 1).getValue() + "| ";
         return textNode;
+    }
+
+    public boolean isLeaf() {
+        boolean isLeaf = true;
+        for (NodesAddress pointer : pointerList){
+            if (pointer.getValue() > 0){
+                isLeaf = false;
+                break;
+            }
+        }
+        return isLeaf;
+    }
+
+    public Node deleteFromLeaf(RekordNode rekordNode) {
+        //todo ryzykowne, jak cos sie wysypie to tutaj sprawdzic
+
+        pointerList.remove(rekordNodeList.indexOf(rekordNode) + 1);
+        rekordNodeList.remove(rekordNode);
+        m--;
+        this.save();
+        return this;
+
+    }
+
+    public Node delete(RekordNode rekordNode) {
+
+        //find lowest from left side tree
+
+        Node leftLeaf = new Node(this.pointerList.get(rekordNodeList.indexOf(rekordNode)));
+        int pointer = leftLeaf.pointerList.get(leftLeaf.pointerList.size() - 1).getValue();
+        while(pointer > 0){
+            leftLeaf = new Node(new NodesAddress(pointer));
+            pointer = leftLeaf.pointerList.get(leftLeaf.pointerList.size() - 1).getValue();
+        }
+
+        RekordNode swapRekordNode = new RekordNode();
+        swapRekordNode.clone(leftLeaf.rekordNodeList.get(leftLeaf.rekordNodeList.size() - 1));
+        this.rekordNodeList.set(this.rekordNodeList.indexOf(rekordNode), swapRekordNode);
+
+        leftLeaf = leftLeaf.deleteFromLeaf(
+                leftLeaf.rekordNodeList.get(leftLeaf.rekordNodeList.size() - 1)
+        );
+
+        return leftLeaf;
+
+    }
+
+    public boolean kompensacjaDelete() {
+        if (parentAdress < 0)
+            return false;   //root
+        Node parentNode = new Node(new NodesAddress(parentAdress));
+        Node sibling = null;
+        //left sibling
+        int myPosition = 0;
+        for (NodesAddress pointer : parentNode.pointerList){
+            if (pointer.getValue() == this.myAddress){
+                break;
+            }
+            myPosition++;
+        }
+        if (myPosition > 0 && parentNode.pointerList.get(myPosition - 1).getValue() > 0){
+            sibling = new Node(parentNode.pointerList.get(myPosition - 1 ));
+            if (sibling.m > sibling.d) {
+                kompensujZ(parentNode, sibling, true);
+                return true;
+            }
+        }
+        if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
+            sibling = new Node(parentNode.pointerList.get(myPosition + 1));
+            if (sibling.m > sibling.d){
+                kompensujZ(parentNode, sibling, false);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Node scalenie() {
+
+        Node parentNode = new Node(new NodesAddress(parentAdress));
+        Node sibling = null;
+
+        //left sibling
+        int myPosition = 0;
+        for (NodesAddress pointer : parentNode.pointerList){
+            if (pointer.getValue() == this.myAddress){
+                break;
+            }
+            myPosition++;
+        }
+
+        if (myPosition > 0 && parentNode.pointerList.get(myPosition - 1).getValue() > 0){
+            sibling = new Node(parentNode.pointerList.get(myPosition - 1 ));
+            parentNode = scalZ(parentNode, sibling, true);
+        }
+
+        if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
+            sibling = new Node(parentNode.pointerList.get(myPosition + 1));
+            parentNode = scalZ(parentNode, sibling, false);
+        }
+
+        return parentNode;
+    }
+
+    private Node scalZ(Node parentNode, Node sibling, boolean leftSibling) {
+
+        int myPosition = 0;
+        for (NodesAddress pointer : parentNode.pointerList){
+            if (pointer.getValue() == this.myAddress){
+                break;
+            }
+            myPosition++;
+        }
+
+        if (leftSibling){
+            sibling.rekordNodeList.add(parentNode.rekordNodeList.get(myPosition - 1));
+            sibling.m++;
+            parentNode.rekordNodeList.remove(myPosition - 1);
+            parentNode.pointerList.remove(myPosition);
+            parentNode.m--;
+            for (RekordNode rekordNode : rekordNodeList){
+                sibling.rekordNodeList.add(rekordNode);
+                sibling.m++;
+            }
+            for (NodesAddress pointer : pointerList){
+                sibling.pointerList.add(pointer);
+            }
+
+            this.remove();
+            sibling.save();
+            parentNode.save();
+
+        } else {
+            this.rekordNodeList.add(parentNode.rekordNodeList.get(myPosition));
+            this.m++;
+            parentNode.rekordNodeList.remove(myPosition);
+            parentNode.pointerList.remove(myPosition + 1);
+            parentNode.m--;
+            for (RekordNode rekordNode : sibling.rekordNodeList){
+                this.rekordNodeList.add(rekordNode);
+                this.m++;
+            }
+            for (NodesAddress pointer : sibling.pointerList){
+                this.pointerList.add(pointer);
+            }
+
+            sibling.remove();
+            this.save();
+            parentNode.save();
+        }
+
+        return parentNode;
+    }
+
+    private void remove() {
+        this.deleted = true;
+        this.save();
+        Globals.getTreeHeader().addReusableAddressTree(this.myAddress);
     }
 }

@@ -50,13 +50,15 @@ public class Main {
 
             if (text.startsWith("d")) {
                 argument = getArgument(text);
-                //del
+                if (bTree.delete(argument))
+                    System.out.println("Usunieto rekord o kluczu: " + argument);
+                else{
+                    System.out.println("Nie znaleziono rekordu o podanym kluczu");
+                }
             }
 
             if (text.startsWith("w")) {
                 bTree.display();
-                //argument = getArgument(text);
-                //del
             }
 
             if (text.startsWith(("f"))){

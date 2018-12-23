@@ -7,7 +7,6 @@ public class BTree {
 
     int h = 0;
     Integer s = null;
-
     Node currentNode = null;
 
     public boolean add(int key) {
@@ -35,7 +34,6 @@ public class BTree {
             }
         }
     }
-
 
     public RekordNode find(Integer key) {
         RekordNode rekordNode = new RekordNode(key);
@@ -121,5 +119,36 @@ public class BTree {
         }
 
         return rekord;
+    }
+
+    public boolean delete(Integer key) {
+        Rekord rekord = new Rekord();
+        RekordNode rekordNode = find(key);
+        if(rekordNode == null)
+            return false;
+
+        rekord.delete(rekordNode.getRecordAddress());
+
+        if (currentNode.isLeaf()){
+            currentNode = currentNode.deleteFromLeaf(rekordNode);
+        } else {
+            currentNode = currentNode.delete(rekordNode);
+        }
+
+        //currentNode is now leaf with deleted record
+
+        if (currentNode.getM() >= Globals.D)
+            return true;
+        else {
+            while(true) {
+                if (currentNode.kompensacjaDelete())
+                    return true;
+                else {
+                    currentNode = currentNode.scalenie();
+                    if (!(currentNode.getM() < Globals.D)) //niedomiar
+                        return true;
+                }
+            }
+        }
     }
 }
