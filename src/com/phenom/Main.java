@@ -45,7 +45,7 @@ public class Main {
                 if(bTree.add(argument))
                     System.out.println("Dodano rekord o kluczu: " + argument + ".");
                 else
-                    System.out.println("Rekord o podanym kluczu juz istnieje");
+                    System.out.println("RekordNode o podanym kluczu juz istnieje");
             }
 
             if (text.startsWith("d")) {
@@ -61,11 +61,11 @@ public class Main {
 
             if (text.startsWith(("f"))){
                 argument = getArgument(text);
-                Rekord rekord = bTree.find(argument);
-                if (rekord == null){
+                RekordNode rekordNode = bTree.find(argument);
+                if (rekordNode == null){
                     System.out.println("Nie znaleziono rekordu o kluczu " + argument.toString() + ".");
                 } else
-                    System.out.println(rekord.toString());
+                    System.out.println(rekordNode.toString());
             }
 
             if (text.startsWith("e")) {

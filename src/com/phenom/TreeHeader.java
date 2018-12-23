@@ -13,11 +13,11 @@ public class TreeHeader implements Serializable {
     private int[] reusableAddressesData = new int[100];
 
     TreeHeader(){
-        rekordSize = -1;
+        rekordSize = 0;//calculateRekordSize();
         rootAdress = -1;
         nodeSize = -1;
         writableAddressTree = -1;
-        writableAddressRekord = -1;
+        writableAddressRekord = 0;
     }
 
     public int getRootAdress() {
@@ -156,4 +156,8 @@ public class TreeHeader implements Serializable {
         }
 
     }
+
+//    public int calculateRekordSize(){
+//
+//    }
 }

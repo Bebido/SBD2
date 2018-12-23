@@ -3,16 +3,16 @@ package com.phenom;
 import java.io.Serializable;
 import java.util.Random;
 
-public class Rekord implements Serializable {
+public class RekordNode implements Serializable {
 
     int key;
     float liczba1, liczba2, liczba3, liczba4, liczba5;
 
-    Rekord(){
+    RekordNode(){
 
     }
 
-    Rekord (int key){
+    RekordNode(int key){
         this.key = key;
         generateValues();
     }
@@ -84,12 +84,12 @@ public class Rekord implements Serializable {
         liczba5 = random.nextFloat() * 1000f;
     }
 
-    public void clone(Rekord rekord) {
-        this.key = rekord.key;
-        this.liczba1 = rekord.getLiczba1();
-        this.liczba2 = rekord.getLiczba2();
-        this.liczba3 = rekord.getLiczba3();
-        this.liczba4 = rekord.getLiczba4();
-        this.liczba5 = rekord.getLiczba5();
+    public void clone(RekordNode rekordNode) {
+        this.key = rekordNode.key;
+        this.liczba1 = rekordNode.getLiczba1();
+        this.liczba2 = rekordNode.getLiczba2();
+        this.liczba3 = rekordNode.getLiczba3();
+        this.liczba4 = rekordNode.getLiczba4();
+        this.liczba5 = rekordNode.getLiczba5();
     }
 }

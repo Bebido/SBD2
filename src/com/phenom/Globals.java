@@ -19,8 +19,8 @@ public class Globals implements Serializable {
         Node node = new Node();
         node.myAddress = -1;
         node.parentAdress = -1;
-        while (node.rekordList.size() < 2*D)
-            node.add(new Rekord(-1));
+        while (node.rekordNodeList.size() < 2*D)
+            node.add(new RekordNode(-1));
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;

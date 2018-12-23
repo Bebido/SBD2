@@ -12,12 +12,12 @@ public class BTree {
 
     public boolean add(int key) {
 
-        Rekord rekord = find(key);
-        if (rekord != null)
-            return false;   //rekord istnieje w pliku
+        RekordNode rekordNode = find(key);
+        if (rekordNode != null)
+            return false;   //rekordNode istnieje w pliku
 
-        rekord = new Rekord(key);
-        currentNode.add(rekord);
+        rekordNode = new RekordNode(key);
+        currentNode.add(rekordNode);
         if (currentNode.getM() <= 2 * currentNode.getD()) {
             currentNode.save();
             return true;
@@ -35,10 +35,10 @@ public class BTree {
     }
 
 
-    public Rekord find(Integer key) {
-        Rekord rekord = new Rekord(key);
+    public RekordNode find(Integer key) {
+        RekordNode rekordNode = new RekordNode(key);
 
-        //jesli brak root lub rekord znajduje sie w ostatnio wczytanym wezle
+        //jesli brak root lub rekordNode znajduje sie w ostatnio wczytanym wezle
         if (s == null) {
             currentNode = new Node();
             currentNode.root = true;
@@ -49,9 +49,9 @@ public class BTree {
             return null;
         }
 //        else if (currentNode != null){
-//            rekord = currentNode.findRekord(key);
-//            if (rekord != null){
-//                return rekord;
+//            rekordNode = currentNode.findRekord(key);
+//            if (rekordNode != null){
+//                return rekordNode;
 //            }
 //        }
 
@@ -64,17 +64,17 @@ public class BTree {
             //doSave = false;
             currentNode = new Node(new NodesAddress(currentS));
             parentHelper = currentS;
-            rekord = currentNode.findRekord(key);
-            if (rekord != null)
+            rekordNode = currentNode.findRekord(key);
+            if (rekordNode != null)
                 break;
             //wyszukanie mniejszych lub wiekszych
-            else if (currentNode.rekordList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordList.get(0).getKey())
+            else if (currentNode.rekordNodeList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordNodeList.get(0).getKey())
                 currentS = currentNode.pointerList.get(0).getValue();
             else
                 currentS = currentNode.getRightSidePointer(key.intValue()).getValue();
         }
 
-        return rekord;
+        return rekordNode;
     }
 
     public void display() {
