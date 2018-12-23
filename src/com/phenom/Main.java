@@ -38,6 +38,12 @@ public class Main {
                 //del
             }
 
+            if (text.startsWith("w")) {
+                bTree.display();
+                //argument = getArgument(text);
+                //del
+            }
+
             if (text.startsWith(("f"))){
                 argument = getArgument(text);
                 Rekord rekord = bTree.find(argument);
