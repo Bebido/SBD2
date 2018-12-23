@@ -120,9 +120,9 @@ public class Node implements Serializable{
 
     public RekordNode findRekord(Integer key) {
         for (RekordNode rekordNode : rekordNodeList){
-            if (rekordNode.getKey().equals(key))
+            if (rekordNode.getKey() == key)
                 return rekordNode;
-            else if (rekordNode.getKey().intValue() > key.intValue())
+            else if (rekordNode.getKey() > key.intValue())
                 return null;
         }
         return null;

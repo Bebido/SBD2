@@ -13,7 +13,7 @@ public class TreeHeader implements Serializable {
     private int[] reusableAddressesData = new int[100];
 
     TreeHeader(){
-        rekordSize = 0;//calculateRekordSize();
+        rekordSize = calculateRekordSize();
         rootAdress = -1;
         nodeSize = -1;
         writableAddressTree = -1;
@@ -157,7 +157,29 @@ public class TreeHeader implements Serializable {
 
     }
 
-//    public int calculateRekordSize(){
-//
-//    }
+    public int calculateRekordSize(){
+
+        Rekord rekord = new Rekord(-1);
+        int size = 0;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(rekord);
+            out.flush();
+            byte[] byteRekord = bos.toByteArray();
+            bos.close();
+            size = byteRekord.length;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return size;
+    }
+
+    public int getAddressToSaveData() {
+        writableAddressRekord = writableAddressRekord + rekordSize;
+        return writableAddressRekord - rekordSize;
+    }
 }
