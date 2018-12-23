@@ -12,12 +12,14 @@ public class BTree {
 
     public boolean add(int key) {
 
-        Rekord rekord = find(key);
-        if (rekord != null)
-            return false;   //rekord istnieje w pliku
+        RekordNode rekordNode = find(key);
+        if (rekordNode != null)
+            return false;   //rekordNode istnieje w pliku
 
-        rekord = new Rekord(key);
-        currentNode.add(rekord);
+        Rekord rekord = new Rekord(key);
+        int rekordAddress = rekord.save();
+        rekordNode = new RekordNode(key, rekordAddress);
+        currentNode.add(rekordNode);
         if (currentNode.getM() <= 2 * currentNode.getD()) {
             currentNode.save();
             return true;
@@ -35,10 +37,10 @@ public class BTree {
     }
 
 
-    public Rekord find(Integer key) {
-        Rekord rekord = new Rekord(key);
+    public RekordNode find(Integer key) {
+        RekordNode rekordNode = new RekordNode(key);
 
-        //jesli brak root lub rekord znajduje sie w ostatnio wczytanym wezle
+        //jesli brak root lub rekordNode znajduje sie w ostatnio wczytanym wezle
         if (s == null) {
             currentNode = new Node();
             currentNode.root = true;
@@ -48,49 +50,36 @@ public class BTree {
             currentNode.save();
             return null;
         }
-//        else if (currentNode != null){
-//            rekord = currentNode.findRekord(key);
-//            if (rekord != null){
-//                return rekord;
-//            }
-//        }
 
         // wczytywanie od root
         int currentS = s.intValue();
         int parentHelper = -5;
-        //boolean doSave;
 
         while(currentS != -1){
-            //doSave = false;
-            currentNode = new Node(new RekordAddress(currentS));
-//            if (currentNode.parentAdress != parentHelper){
-//                currentNode.parentAdress = parentHelper;
-//                currentNode.save();
-//            }
+            currentNode = new Node(new NodesAddress(currentS));
             parentHelper = currentS;
-            rekord = currentNode.findRekord(key);
-            if (rekord != null)
+            rekordNode = currentNode.findRekord(key);
+            if (rekordNode != null)
                 break;
             //wyszukanie mniejszych lub wiekszych
-            else if (currentNode.rekordList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordList.get(0).getKey())
+            else if (currentNode.rekordNodeList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordNodeList.get(0).getKey())
                 currentS = currentNode.pointerList.get(0).getValue();
             else
                 currentS = currentNode.getRightSidePointer(key.intValue()).getValue();
         }
 
-        return rekord;
+        return rekordNode;
     }
 
     public void display() {
         int currentS = s.intValue();
-        List<RekordAddress> addressesToDisplay = new LinkedList<>();
-        addressesToDisplay.add(new RekordAddress(-20));
+        List<NodesAddress> addressesToDisplay = new LinkedList<>();
+        addressesToDisplay.add(new NodesAddress(-20));
 
         while(currentS > 0) {
-            //doSave = false;
-            currentNode = new Node(new RekordAddress(currentS));
+            currentNode = new Node(new NodesAddress(currentS));
             System.out.print(currentNode.toString());
-            for (RekordAddress pointer : currentNode.pointerList){
+            for (NodesAddress pointer : currentNode.pointerList){
                 if (pointer.getValue() > 0)
                     addressesToDisplay.add(pointer);
             }
@@ -103,7 +92,7 @@ public class BTree {
                         break;
                     currentS = addressesToDisplay.get(0).getValue();
                     if (addressesToDisplay.size() > 0){
-                        addressesToDisplay.add(new RekordAddress(-20));
+                        addressesToDisplay.add(new NodesAddress(-20));
                     }
                 }
                 addressesToDisplay.remove(0);
@@ -111,5 +100,26 @@ public class BTree {
                 currentS = -1;
             }
         }
+    }
+
+    public void setFromHeader(){
+        this.s = Globals.getTreeHeader().getRootAdress();
+    }
+
+    public void setHeader(){
+        Globals.getTreeHeader().setRootAdress(this.s.intValue());
+    }
+
+    public Rekord getRekord(Integer key) {
+
+        Rekord rekord = new Rekord();
+        RekordNode rekordNode = find(key);
+        if(rekordNode == null){
+            return null;
+        } else {
+          rekord.load(rekordNode.getRecordAddress());
+        }
+
+        return rekord;
     }
 }

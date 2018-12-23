@@ -1,6 +1,6 @@
 package com.phenom;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.Random;
 
 public class Rekord implements Serializable {
@@ -9,19 +9,15 @@ public class Rekord implements Serializable {
     float liczba1, liczba2, liczba3, liczba4, liczba5;
 
     Rekord(){
-
+        this.key = -1;
     }
 
-    Rekord (int key){
+    Rekord(int key){
         this.key = key;
         generateValues();
     }
 
-    Float getValue(){
-        return (liczba1 + liczba2 + liczba3 + liczba4 + liczba5) / 5;
-    }
-
-    public Integer getKey() {
+    public int getKey() {
         return key;
     }
 
@@ -29,7 +25,7 @@ public class Rekord implements Serializable {
         this.key = key;
     }
 
-    public Float getLiczba1() {
+    public float getLiczba1() {
         return liczba1;
     }
 
@@ -37,7 +33,7 @@ public class Rekord implements Serializable {
         this.liczba1 = liczba1;
     }
 
-    public Float getLiczba2() {
+    public float getLiczba2() {
         return liczba2;
     }
 
@@ -45,7 +41,7 @@ public class Rekord implements Serializable {
         this.liczba2 = liczba2;
     }
 
-    public Float getLiczba3() {
+    public float getLiczba3() {
         return liczba3;
     }
 
@@ -53,7 +49,7 @@ public class Rekord implements Serializable {
         this.liczba3 = liczba3;
     }
 
-    public Float getLiczba4() {
+    public float getLiczba4() {
         return liczba4;
     }
 
@@ -61,7 +57,7 @@ public class Rekord implements Serializable {
         this.liczba4 = liczba4;
     }
 
-    public Float getLiczba5() {
+    public float getLiczba5() {
         return liczba5;
     }
 
@@ -69,9 +65,14 @@ public class Rekord implements Serializable {
         this.liczba5 = liczba5;
     }
 
+    float getValue(){
+        return (liczba1 + liczba2 + liczba3 + liczba4 + liczba5) / 5;
+    }
+
     @Override
     public String toString(){
-        String s = this.getKey().toString() + " " + this.getValue().toString();
+        String s = "K: " + this.getKey() + " V: " + this.getValue() + " L: " + this.getLiczba1() + " " +
+                this.getLiczba2() + " " + this.getLiczba3() + " " + this.getLiczba4() + " " + this.getLiczba5();
         return s;
     }
 
@@ -91,5 +92,63 @@ public class Rekord implements Serializable {
         this.liczba3 = rekord.getLiczba3();
         this.liczba4 = rekord.getLiczba4();
         this.liczba5 = rekord.getLiczba5();
+    }
+
+    public int save() {
+
+        int myAddress = 0;
+        try  {
+            myAddress = Globals.getTreeHeader().getAddressToSaveData();
+
+            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+
+            out.writeObject(this);
+            out.flush();
+            byte[] byteRekord = bos.toByteArray();
+            bos.close();
+            out.close();
+
+            dataFile.seek(myAddress);
+            dataFile.write(byteRekord, 0, Globals.getTreeHeader().getRekordSize());
+            dataFile.close();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return myAddress;
+    }
+
+    public void load(int recordAddress) {
+
+        byte[] recordInBytes = new byte[Globals.getTreeHeader().getRekordSize()];
+
+        try {
+            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            dataFile.seek(recordAddress);
+            dataFile.read(recordInBytes, 0, recordInBytes.length);
+            dataFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(recordInBytes);
+        ObjectInput in = null;
+        try {
+            in = new ObjectInputStream(bis);
+            Rekord o = (Rekord) in.readObject();
+            this.clone(o);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }
