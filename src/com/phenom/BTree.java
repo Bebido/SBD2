@@ -63,10 +63,6 @@ public class BTree {
         while(currentS != -1){
             //doSave = false;
             currentNode = new Node(new RekordAddress(currentS));
-//            if (currentNode.parentAdress != parentHelper){
-//                currentNode.parentAdress = parentHelper;
-//                currentNode.save();
-//            }
             parentHelper = currentS;
             rekord = currentNode.findRekord(key);
             if (rekord != null)
@@ -111,5 +107,13 @@ public class BTree {
                 currentS = -1;
             }
         }
+    }
+
+    public void setFromHeader(){
+        this.s = Globals.getTreeHeader().getRootAdress();
+    }
+
+    public void setHeader(){
+        Globals.getTreeHeader().setRootAdress(this.s.intValue());
     }
 }

@@ -5,6 +5,7 @@ import java.io.*;
 public class TreeHeader implements Serializable {
 
     private int rekordSize;
+    private int nodeSize;
     private int rootAdress;
     private int writableAddressTree;
     private int writableAddressRekord;
@@ -14,6 +15,7 @@ public class TreeHeader implements Serializable {
     TreeHeader(){
         rekordSize = -1;
         rootAdress = -1;
+        nodeSize = -1;
         writableAddressTree = -1;
         writableAddressRekord = -1;
     }
@@ -67,8 +69,16 @@ public class TreeHeader implements Serializable {
     }
 
     public int getAddressToSaveTree() {
-        writableAddressTree = writableAddressTree + rekordSize;
-        return writableAddressTree - rekordSize;
+        writableAddressTree = writableAddressTree + nodeSize;
+        return writableAddressTree - nodeSize;
+    }
+
+    public int getNodeSize() {
+        return nodeSize;
+    }
+
+    public void setNodeSize(int nodeSize) {
+        this.nodeSize = nodeSize;
     }
 
     public int calculateSize(){
@@ -92,7 +102,7 @@ public class TreeHeader implements Serializable {
 
     public void save() {
         try  {
-            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            RandomAccessFile dataFile = new RandomAccessFile(Globals.TREE_FILE, "rw");
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(bos);
 
@@ -106,5 +116,44 @@ public class TreeHeader implements Serializable {
         } catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    public void load(){
+
+        byte[] headerInBytes = new byte[this.calculateSize()];
+        try {
+            RandomAccessFile treeFile = new RandomAccessFile(Globals.TREE_FILE, "rw");
+            treeFile.seek(0);
+            treeFile.read(headerInBytes, 0, headerInBytes.length);
+            treeFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(headerInBytes);
+        ObjectInput in = null;
+        try {
+            in = new ObjectInputStream(bis);
+            Object o = (TreeHeader)in.readObject();
+            this.nodeSize = ((TreeHeader) o).nodeSize;
+            this.rootAdress = ((TreeHeader) o).rootAdress;
+            this.writableAddressRekord = ((TreeHeader) o).writableAddressRekord;
+            this.writableAddressTree = ((TreeHeader) o).writableAddressTree;
+            this.rekordSize = ((TreeHeader) o).rekordSize;
+            this.reusableAddressesData = ((TreeHeader) o).reusableAddressesData;
+            this.reusableAddressesTree = ((TreeHeader) o).reusableAddressesTree;
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
     }
 }

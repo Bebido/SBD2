@@ -9,14 +9,7 @@ public class Globals implements Serializable {
     static final String DATA_FILE = "dataFile.dat";
     static final String TREE_FILE = "tree.btree";
     static TreeHeader treeHeader = null;
-    static Integer nodeSize;
-    static Integer treeHeaderSize;
-
-    public static void loadTreeHeader(){
-        if (treeHeader == null){
-
-        }
-    }
+    static int treeHeaderSize;
 
     public static void initTreeHeader(){
         treeHeader = new TreeHeader();
@@ -38,14 +31,13 @@ public class Globals implements Serializable {
             out.flush();
             byte[] byteNode = bos.toByteArray();
             bos.close();
-            treeHeader.setRekordSize(byteNode.length);
+            treeHeader.setNodeSize(byteNode.length);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         treeHeaderSize = treeHeader.calculateSize();
         treeHeader.setWritableAddressTree(treeHeaderSize);
-
         treeHeader.save();
     }
 
@@ -57,4 +49,17 @@ public class Globals implements Serializable {
         Globals.treeHeader = treeHeader;
     }
 
+    public static void initFromFile() {
+
+        treeHeader = new TreeHeader();
+        treeHeader.load();
+    }
+
+    public static int getTreeHeaderSize() {
+        return treeHeaderSize;
+    }
+
+    public static void setTreeHeaderSize(int treeHeaderSize) {
+        Globals.treeHeaderSize = treeHeaderSize;
+    }
 }

@@ -35,7 +35,7 @@ public class Node implements Serializable{
 
     Node(RekordAddress adress){
 
-        byte[] nodeInBytes = new byte[Globals.getTreeHeader().getRekordSize()];
+        byte[] nodeInBytes = new byte[Globals.getTreeHeader().getNodeSize()];
         try {
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
             dataFile.seek(adress.getValue());
@@ -130,9 +130,7 @@ public class Node implements Serializable{
 
     public void save(){
         try  {
-            //maksymalny rozmiar
 
-            //int i = -20;
             while (this.pointerList.size() < 2*d + 1){
                 pointerList.add(new RekordAddress(-2));
             }
@@ -143,8 +141,6 @@ public class Node implements Serializable{
             if (myAddress < 0){
                 myAddress = Globals.getTreeHeader().getAddressToSaveTree();
             }
-//            Node nodeToSave = new Node();
-//            nodeToSave.clone(this);
 
             RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -156,11 +152,8 @@ public class Node implements Serializable{
             bos.close();
             out.close();
 
-
-
-            //Globals.getTreeHeader().getRekordSize();//todo: sprawdzic z headertree.lenght;
             dataFile.seek(myAddress);
-            dataFile.write(byteNode, 0, Globals.getTreeHeader().getRekordSize());
+            dataFile.write(byteNode, 0, Globals.getTreeHeader().getNodeSize());
             dataFile.close();
         } catch (Exception e){
             e.printStackTrace();

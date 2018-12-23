@@ -12,10 +12,25 @@ public class Main {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         String text;
         Integer argument;
-        ///tutaj z pliku bedzie inaczej
-        if(Globals.getTreeHeader() == null)
-            Globals.initTreeHeader();
-        BTree bTree = new BTree();
+        BTree bTree = null;
+
+        System.out.println("Czy wczytac baze pliku? (t/n)");
+        try {
+            text = in.readLine();
+            if (text.startsWith("t")) {
+                Globals.initFromFile();
+                bTree = new BTree();
+                bTree.setFromHeader();
+                System.out.println("Wczytano baze z pliku");
+            } else {
+                if(Globals.getTreeHeader() == null)
+                    Globals.initTreeHeader();
+                bTree = new BTree();
+                System.out.println("Utworzona nowa baze");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         while (going){
             try {
@@ -55,6 +70,8 @@ public class Main {
 
             if (text.startsWith("e")) {
                 going = false;
+                bTree.setHeader();
+                Globals.getTreeHeader().save();
             }
         }
     }
