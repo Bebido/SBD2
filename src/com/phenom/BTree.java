@@ -53,11 +53,17 @@ public class BTree {
         int currentS = s.intValue();
         int parentHelper = -5;
 
-        while(currentS != -1){
+        while(currentS > 0){
             currentNode = new Node(new NodesAddress(currentS));
+            if (currentNode.parentAdress > 0 && currentNode.parentAdress != parentHelper){
+                currentNode.parentAdress = parentHelper;
+                currentNode.save();
+            }
             parentHelper = currentS;
             rekordNode = currentNode.findRekord(key);
             if (rekordNode != null)
+                break;
+            if (currentNode.rekordNodeList.size() == 0)
                 break;
             //wyszukanie mniejszych lub wiekszych
             else if (currentNode.rekordNodeList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordNodeList.get(0).getKey())
@@ -70,6 +76,10 @@ public class BTree {
     }
 
     public void display() {
+        if (s == null){
+            System.out.println("Baza jest pusta");
+            return;
+        }
         int currentS = s.intValue();
         List<NodesAddress> addressesToDisplay = new LinkedList<>();
         addressesToDisplay.add(new NodesAddress(-20));
@@ -145,6 +155,13 @@ public class BTree {
                     return true;
                 else {
                     currentNode = currentNode.scalenie();
+                    if (currentNode == null)
+                        return true;
+                    if (currentNode.root){
+                        h--;
+                        s = currentNode.myAddress;
+                        return true;
+                    }
                     if (!(currentNode.getM() < Globals.D)) //niedomiar
                         return true;
                 }

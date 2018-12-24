@@ -222,17 +222,34 @@ public class TreeHeader implements Serializable {
     }
 
     public void addReusableAddressData(int address) {
-        for (int i = 0; i < reusableAddressesData.length; i++){
-            if (reusableAddressesData[i] < 0 ){
-                reusableAddressesData[i] = address;
+        boolean istnieje = false;
+        for (int i : reusableAddressesData){
+            if (i == address)
+                istnieje = true;
+        }
+        if (!istnieje) {
+            for (int i = 0; i < reusableAddressesData.length; i++) {
+                if (reusableAddressesData[i] < 0) {
+                    reusableAddressesData[i] = address;
+                    break;
+                }
             }
         }
     }
 
     public void addReusableAddressTree(int address) {
-        for (int i = 0; i < reusableAddressesTree.length; i++){
-            if (reusableAddressesTree[i] < 0 ){
-                reusableAddressesTree[i] = address;
+        boolean istnieje = false;
+        for (int i : reusableAddressesTree){
+            if (i == address)
+                istnieje = true;
+        }
+
+        if (!istnieje) {
+            for (int i = 0; i < reusableAddressesTree.length; i++) {
+                if (reusableAddressesTree[i] < 0) {
+                    reusableAddressesTree[i] = address;
+                    break;
+                }
             }
         }
     }

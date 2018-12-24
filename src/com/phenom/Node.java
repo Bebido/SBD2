@@ -79,7 +79,7 @@ public class Node implements Serializable{
     public void add(RekordNode rekordNode){
         boolean added = false;
 
-        if (this.rekordNodeList.size() == 0) {
+        if (this.pointerList.size() == 0) {
             pointerList.add(new NodesAddress(-1));
             pointerList.add(new NodesAddress(-1));
             rekordNodeList.add(rekordNode);
@@ -223,8 +223,7 @@ public class Node implements Serializable{
                 kompensujZ(parentNode, sibling, true);
                 return true;
             }
-        }
-        if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
+        }else if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
             sibling = new Node(parentNode.pointerList.get(myPosition + 1));
             if (sibling.m < 2*sibling.d){
                 kompensujZ(parentNode, sibling, false);
@@ -238,18 +237,21 @@ public class Node implements Serializable{
     private void kompensujZ(Node parentNode, Node siblingNode, boolean isLeftSibling){
         List<RekordNode> joinRekordy = new LinkedList<>();
         List<NodesAddress> joinPointers = new LinkedList<>();
-        Integer parentRekordPosition = 0;
+
+        int myPosition = 0;
+        for (NodesAddress pointer : parentNode.pointerList){
+            if (pointer.getValue() == this.myAddress){
+                break;
+            }
+            myPosition++;
+        }
+
         if (isLeftSibling){
             for(RekordNode rekordNode : siblingNode.getRekordNodeList()){
                 joinRekordy.add(rekordNode);
             }
-            for(RekordNode rekordNode : parentNode.getRekordNodeList()){
-                if (rekordNode.getKey() > ((LinkedList<RekordNode>) joinRekordy).getLast().getKey()){
-                    joinRekordy.add(rekordNode);
-                    parentRekordPosition = parentNode.getRekordNodeList().indexOf(rekordNode);
-                    break;
-                }
-            }
+            joinRekordy.add(parentNode.getRekordNodeList().get(myPosition - 1));
+
             for(RekordNode rekordNode : this.getRekordNodeList()){
                 joinRekordy.add(rekordNode);
             }
@@ -264,12 +266,8 @@ public class Node implements Serializable{
             for(RekordNode rekordNode : this.getRekordNodeList()){
                 joinRekordy.add(rekordNode);
             }
-            for(RekordNode rekordNode : parentNode.getRekordNodeList()){
-                if (rekordNode.getKey() > ((LinkedList<RekordNode>) joinRekordy).getLast().getKey()){
-                    joinRekordy.add(rekordNode);
-                    parentRekordPosition = parentNode.getRekordNodeList().indexOf(rekordNode);
-                }
-            }
+            joinRekordy.add(parentNode.getRekordNodeList().get(myPosition));
+
             for(RekordNode rekordNode : siblingNode.getRekordNodeList()){
                 joinRekordy.add(rekordNode);
             }
@@ -299,7 +297,7 @@ public class Node implements Serializable{
             }
             siblingNode.save();
 
-            parentNode.getRekordNodeList().set(parentRekordPosition, joinRekordy.get(podzial));
+            parentNode.getRekordNodeList().set(myPosition - 1, joinRekordy.get(podzial));
             parentNode.save();
 
             for(int i = podzial + 1; i < joinRekordy.size(); i++){
@@ -310,6 +308,7 @@ public class Node implements Serializable{
                 this.pointerList.add(joinPointers.get(i));
             }
             this.save();
+
         } else {
             this.pointerList.add(joinPointers.get(0));
             for (int i = 0; i < podzial; i++){
@@ -319,7 +318,7 @@ public class Node implements Serializable{
             }
             this.save();
 
-            parentNode.getRekordNodeList().set(parentRekordPosition, joinRekordy.get(podzial));
+            parentNode.getRekordNodeList().set(myPosition, joinRekordy.get(podzial));
             parentNode.save();
 
             for(int i = podzial + 1; i < joinRekordy.size(); i++){
@@ -422,17 +421,19 @@ public class Node implements Serializable{
     public String toString() {
         String textNode = " ";
         for(int i = 0; i < rekordNodeList.size(); i++){
-            textNode = textNode + "|" +pointerList.get(i).getValue() + "|" + rekordNodeList.get(i).getKey();
+            textNode = textNode + "|" + pointerList.get(i).getValue() + "|"
+                    + rekordNodeList.get(i).getKey();
         }
-        textNode = textNode + "|" + pointerList.get(pointerList.size() - 1).getValue() + "| ";
+        if (pointerList.size() > 0)
+            textNode = textNode + "|" + pointerList.get(pointerList.size() - 1).getValue() + "| ";
         return textNode;
     }
 
     public boolean isLeaf() {
-        boolean isLeaf = true;
+        boolean isLeaf = false;
         for (NodesAddress pointer : pointerList){
-            if (pointer.getValue() > 0){
-                isLeaf = false;
+            if (pointer.getValue() < 0){
+                isLeaf = true;
                 break;
             }
         }
@@ -440,24 +441,38 @@ public class Node implements Serializable{
     }
 
     public Node deleteFromLeaf(RekordNode rekordNode) {
-        //todo ryzykowne, jak cos sie wysypie to tutaj sprawdzic
 
         pointerList.remove(rekordNodeList.indexOf(rekordNode) + 1);
         rekordNodeList.remove(rekordNode);
+        if (rekordNodeList.size() == 0 && root)
+            pointerList.remove(0);
         m--;
         this.save();
         return this;
-
     }
 
     public Node delete(RekordNode rekordNode) {
 
         //find lowest from left side tree
+        int parentHelper = this.myAddress;
 
         Node leftLeaf = new Node(this.pointerList.get(rekordNodeList.indexOf(rekordNode)));
+        if (leftLeaf.parentAdress > 0 && leftLeaf.parentAdress != parentHelper){
+            leftLeaf.parentAdress = parentHelper;
+            leftLeaf.save();
+        }
+        parentHelper = leftLeaf.myAddress;
+
         int pointer = leftLeaf.pointerList.get(leftLeaf.pointerList.size() - 1).getValue();
         while(pointer > 0){
             leftLeaf = new Node(new NodesAddress(pointer));
+
+            if (leftLeaf.parentAdress > 0 && leftLeaf.parentAdress != parentHelper){
+                leftLeaf.parentAdress = parentHelper;
+                leftLeaf.save();
+            }
+            parentHelper = leftLeaf.myAddress;
+
             pointer = leftLeaf.pointerList.get(leftLeaf.pointerList.size() - 1).getValue();
         }
 
@@ -469,12 +484,14 @@ public class Node implements Serializable{
                 leftLeaf.rekordNodeList.get(leftLeaf.rekordNodeList.size() - 1)
         );
 
+        this.save();
+        leftLeaf.save();
         return leftLeaf;
 
     }
 
     public boolean kompensacjaDelete() {
-        if (parentAdress < 0)
+        if (parentAdress <= 0)
             return false;   //root
         Node parentNode = new Node(new NodesAddress(parentAdress));
         Node sibling = null;
@@ -492,8 +509,7 @@ public class Node implements Serializable{
                 kompensujZ(parentNode, sibling, true);
                 return true;
             }
-        }
-        if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
+        } else if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
             sibling = new Node(parentNode.pointerList.get(myPosition + 1));
             if (sibling.m > sibling.d){
                 kompensujZ(parentNode, sibling, false);
@@ -505,6 +521,8 @@ public class Node implements Serializable{
 
     public Node scalenie() {
 
+        if (parentAdress <= 0)
+            return null;
         Node parentNode = new Node(new NodesAddress(parentAdress));
         Node sibling = null;
 
@@ -520,9 +538,7 @@ public class Node implements Serializable{
         if (myPosition > 0 && parentNode.pointerList.get(myPosition - 1).getValue() > 0){
             sibling = new Node(parentNode.pointerList.get(myPosition - 1 ));
             parentNode = scalZ(parentNode, sibling, true);
-        }
-
-        if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
+        } else if (myPosition < 2*d && parentNode.pointerList.size() > myPosition + 1 && parentNode.pointerList.get(myPosition + 1).getValue() > 0){
             sibling = new Node(parentNode.pointerList.get(myPosition + 1));
             parentNode = scalZ(parentNode, sibling, false);
         }
@@ -555,8 +571,20 @@ public class Node implements Serializable{
             }
 
             this.remove();
-            sibling.save();
-            parentNode.save();
+            if (parentNode.rekordNodeList.size() == 0 && parentNode.root){
+                sibling.root = true;
+                sibling.parentAdress = -1;
+                sibling.save();
+                parentNode.remove();
+            }
+            else {
+                sibling.save();
+                parentNode.save();
+            }
+
+            if (sibling.root)
+                parentNode = sibling;
+
 
         } else {
             this.rekordNodeList.add(parentNode.rekordNodeList.get(myPosition));
@@ -573,8 +601,21 @@ public class Node implements Serializable{
             }
 
             sibling.remove();
-            this.save();
-            parentNode.save();
+            if (parentNode.rekordNodeList.size() == 0 && parentNode.root){
+                this.root = true;
+                this.parentAdress = -1;
+                this.save();
+                parentNode.remove();
+            }
+            else {
+                this.save();
+                parentNode.save();
+            }
+
+            if (this.root){
+                parentNode = this;
+            }
+
         }
 
         return parentNode;
