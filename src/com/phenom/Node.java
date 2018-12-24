@@ -73,7 +73,7 @@ public class Node implements Serializable{
                 ex.printStackTrace();
             }
         }
-
+        Globals.addOdczyt();
     }
 
     public void add(RekordNode rekordNode){
@@ -162,6 +162,7 @@ public class Node implements Serializable{
             e.printStackTrace();
         }
         this.cleanDummyValues();
+        Globals.addZapis();
     }
 
     private void clone(Node node) {

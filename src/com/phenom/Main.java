@@ -75,6 +75,8 @@ public class Main {
                 bTree.setHeader();
                 Globals.getTreeHeader().save();
             }
+
+            System.out.println("Zapisy: " + Globals.zapisyTree + " Odczyty: " + Globals.odczytyTree);
         }
     }
 

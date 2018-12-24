@@ -137,6 +137,7 @@ public class TreeHeader implements Serializable {
         } catch (Exception e){
             e.printStackTrace();
         }
+        Globals.addZapis();
     }
 
     public void load(){
@@ -176,6 +177,7 @@ public class TreeHeader implements Serializable {
             }
         }
 
+        Globals.addOdczyt();
     }
 
     public int calculateRekordSize(){

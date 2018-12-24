@@ -118,6 +118,7 @@ public class Rekord implements Serializable {
         } catch (Exception e){
             e.printStackTrace();
         }
+        Globals.addZapis();
         return myAddress;
     }
 
@@ -152,6 +153,7 @@ public class Rekord implements Serializable {
                 ex.printStackTrace();
             }
         }
+        Globals.addOdczyt();
     }
 
     public void delete(int recordAddress) {
