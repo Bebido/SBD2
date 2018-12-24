@@ -158,7 +158,7 @@ public class BTree {
                     if (currentNode == null)
                         return true;
                     if (currentNode.root){
-                        h--;
+                        Globals.minH();
                         s = currentNode.myAddress;
                         return true;
                     }

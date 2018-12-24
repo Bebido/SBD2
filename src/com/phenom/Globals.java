@@ -12,6 +12,7 @@ public class Globals implements Serializable {
     static int treeHeaderSize;
     static int zapisyTree = 0;
     static int odczytyTree = 0;
+    static int h = 0;
 
     public static void initTreeHeader(){
         treeHeader = new TreeHeader();
@@ -79,5 +80,17 @@ public class Globals implements Serializable {
 
     public static int getOdczytyTree() {
         return odczytyTree;
+    }
+
+    public static int getH() {
+        return h;
+    }
+
+    public static void addH() {
+        h++;
+    }
+
+    public static void minH(){
+        h--;
     }
 }

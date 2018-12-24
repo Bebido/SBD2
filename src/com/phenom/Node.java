@@ -356,6 +356,7 @@ public class Node implements Serializable{
         Node parentNode = null;
         boolean isRoot = this.root;
         if(isRoot){
+            Globals.addH();
             this.root = false;
             parentNode = new Node();
             parentNode.root = true;
@@ -616,7 +617,6 @@ public class Node implements Serializable{
             if (this.root){
                 parentNode = this;
             }
-
         }
 
         return parentNode;
