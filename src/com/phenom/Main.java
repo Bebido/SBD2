@@ -57,6 +57,15 @@ public class Main {
                 }
             }
 
+            if (text.startsWith("u")) {
+                argument = getArgument(text);
+                if (bTree.update(argument))
+                    System.out.println("Zaktualizowano rekord: " + argument);
+                else{
+                    System.out.println("Nie znaleziono rekordu o podanym kluczu");
+                }
+            }
+
             if (text.startsWith("w")) {
                 bTree.display();
             }

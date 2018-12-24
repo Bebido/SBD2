@@ -168,4 +168,17 @@ public class BTree {
             }
         }
     }
+
+    public boolean update(Integer key) {
+        Rekord rekordUpdate = new Rekord(key);
+        RekordNode rekordNode = find(key);
+        if(rekordNode == null)
+            return false;
+
+        Rekord oldRekord = new Rekord();
+        oldRekord.load(rekordNode.recordAddress);
+        oldRekord.clone(rekordUpdate);
+        oldRekord.save(rekordNode.recordAddress);
+        return true;
+    }
 }
