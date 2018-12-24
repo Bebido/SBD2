@@ -8,6 +8,7 @@ public class Globals implements Serializable {
     static final int D = 1;
     static final String DATA_FILE = "dataFile.dat";
     static final String TREE_FILE = "tree.btree";
+    static final String DEMO_FILE = "demo.txt";
     static TreeHeader treeHeader = null;
     static int treeHeaderSize;
     static int zapisyTree = 0;

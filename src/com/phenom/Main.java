@@ -1,8 +1,6 @@
 package com.phenom;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 
 public class Main {
 
@@ -40,6 +38,10 @@ public class Main {
                 text = "";
             }
 
+            if (text.startsWith("q")) {
+                in = new BufferedReader(new InputStreamReader(System.in));
+            }
+
             if (text.startsWith("a")) {
                 argument = getArgument(text);
                 if(bTree.add(argument))
@@ -66,6 +68,15 @@ public class Main {
                 }
             }
 
+            if (text.startsWith("p")){
+                //wczytanie rozkazow z pliku
+                try {
+                    in = new BufferedReader(new FileReader(Globals.DEMO_FILE));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if (text.startsWith("w")) {
                 bTree.display();
             }
@@ -85,6 +96,9 @@ public class Main {
                 Globals.getTreeHeader().save();
             }
 
+            if (text.isEmpty()){
+                in = new BufferedReader(new InputStreamReader(System.in));
+            }
             System.out.println("Zapisy: " + Globals.zapisyTree + " Odczyty: " + Globals.odczytyTree);
         }
     }
