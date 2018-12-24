@@ -8,8 +8,12 @@ public class Globals implements Serializable {
     static final int D = 1;
     static final String DATA_FILE = "dataFile.dat";
     static final String TREE_FILE = "tree.btree";
+    static final String DEMO_FILE = "demo.txt";
     static TreeHeader treeHeader = null;
     static int treeHeaderSize;
+    static int zapisyTree = 0;
+    static int odczytyTree = 0;
+    static int h = 0;
 
     public static void initTreeHeader(){
         treeHeader = new TreeHeader();
@@ -61,5 +65,33 @@ public class Globals implements Serializable {
 
     public static void setTreeHeaderSize(int treeHeaderSize) {
         Globals.treeHeaderSize = treeHeaderSize;
+    }
+
+    public static void addZapis(){
+        zapisyTree++;
+    }
+
+    public static void addOdczyt(){
+        odczytyTree++;
+    }
+
+    public static int getZapisyTree() {
+        return zapisyTree;
+    }
+
+    public static int getOdczytyTree() {
+        return odczytyTree;
+    }
+
+    public static int getH() {
+        return h;
+    }
+
+    public static void addH() {
+        h++;
+    }
+
+    public static void minH(){
+        h--;
     }
 }

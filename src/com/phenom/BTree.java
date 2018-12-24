@@ -7,7 +7,6 @@ public class BTree {
 
     int h = 0;
     Integer s = null;
-
     Node currentNode = null;
 
     public boolean add(int key) {
@@ -36,7 +35,6 @@ public class BTree {
         }
     }
 
-
     public RekordNode find(Integer key) {
         RekordNode rekordNode = new RekordNode(key);
 
@@ -55,11 +53,17 @@ public class BTree {
         int currentS = s.intValue();
         int parentHelper = -5;
 
-        while(currentS != -1){
+        while(currentS > 0){
             currentNode = new Node(new NodesAddress(currentS));
+            if (currentNode.parentAdress > 0 && currentNode.parentAdress != parentHelper){
+                currentNode.parentAdress = parentHelper;
+                currentNode.save();
+            }
             parentHelper = currentS;
             rekordNode = currentNode.findRekord(key);
             if (rekordNode != null)
+                break;
+            if (currentNode.rekordNodeList.size() == 0)
                 break;
             //wyszukanie mniejszych lub wiekszych
             else if (currentNode.rekordNodeList.get(0).getKey() >= 0 && key.intValue() < currentNode.rekordNodeList.get(0).getKey())
@@ -72,6 +76,10 @@ public class BTree {
     }
 
     public void display() {
+        if (s == null){
+            System.out.println("Baza jest pusta");
+            return;
+        }
         int currentS = s.intValue();
         List<NodesAddress> addressesToDisplay = new LinkedList<>();
         addressesToDisplay.add(new NodesAddress(-20));
@@ -121,5 +129,56 @@ public class BTree {
         }
 
         return rekord;
+    }
+
+    public boolean delete(Integer key) {
+        Rekord rekord = new Rekord();
+        RekordNode rekordNode = find(key);
+        if(rekordNode == null)
+            return false;
+
+        rekord.delete(rekordNode.getRecordAddress());
+
+        if (currentNode.isLeaf()){
+            currentNode = currentNode.deleteFromLeaf(rekordNode);
+        } else {
+            currentNode = currentNode.delete(rekordNode);
+        }
+
+        //currentNode is now leaf with deleted record
+
+        if (currentNode.getM() >= Globals.D)
+            return true;
+        else {
+            while(true) {
+                if (currentNode.kompensacjaDelete())
+                    return true;
+                else {
+                    currentNode = currentNode.scalenie();
+                    if (currentNode == null)
+                        return true;
+                    if (currentNode.root){
+                        Globals.minH();
+                        s = currentNode.myAddress;
+                        return true;
+                    }
+                    if (!(currentNode.getM() < Globals.D)) //niedomiar
+                        return true;
+                }
+            }
+        }
+    }
+
+    public boolean update(Integer key) {
+        Rekord rekordUpdate = new Rekord(key);
+        RekordNode rekordNode = find(key);
+        if(rekordNode == null)
+            return false;
+
+        Rekord oldRekord = new Rekord();
+        oldRekord.load(rekordNode.recordAddress);
+        oldRekord.clone(rekordUpdate);
+        oldRekord.save(rekordNode.recordAddress);
+        return true;
     }
 }

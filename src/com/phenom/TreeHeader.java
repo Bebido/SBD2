@@ -1,6 +1,8 @@
 package com.phenom;
 
 import java.io.*;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class TreeHeader implements Serializable {
 
@@ -18,6 +20,8 @@ public class TreeHeader implements Serializable {
         nodeSize = -1;
         writableAddressTree = -1;
         writableAddressRekord = 0;
+        Arrays.fill(reusableAddressesData, -1);
+        Arrays.fill(reusableAddressesTree, -1);
     }
 
     public int getRootAdress() {
@@ -69,8 +73,25 @@ public class TreeHeader implements Serializable {
     }
 
     public int getAddressToSaveTree() {
-        writableAddressTree = writableAddressTree + nodeSize;
-        return writableAddressTree - nodeSize;
+
+        int addressToSave = -1;
+        boolean reuse = false;
+
+        for (int i = 0; i < reusableAddressesTree.length; i++){
+            if (reusableAddressesTree[i] >= 0){
+                addressToSave = reusableAddressesTree[i];
+                reusableAddressesTree[i] = -1;
+                reuse = true;
+                break;
+            }
+        }
+
+        if (!reuse) {
+            writableAddressTree = writableAddressTree + nodeSize;
+            return writableAddressTree - nodeSize;
+        }
+        else
+            return addressToSave;
     }
 
     public int getNodeSize() {
@@ -116,6 +137,7 @@ public class TreeHeader implements Serializable {
         } catch (Exception e){
             e.printStackTrace();
         }
+        Globals.addZapis();
     }
 
     public void load(){
@@ -155,6 +177,7 @@ public class TreeHeader implements Serializable {
             }
         }
 
+        Globals.addOdczyt();
     }
 
     public int calculateRekordSize(){
@@ -179,7 +202,57 @@ public class TreeHeader implements Serializable {
     }
 
     public int getAddressToSaveData() {
-        writableAddressRekord = writableAddressRekord + rekordSize;
-        return writableAddressRekord - rekordSize;
+
+        int addressToSave = -1;
+        boolean reuse = false;
+
+        for (int i = 0; i < reusableAddressesData.length; i++){
+            if (reusableAddressesData[i] >= 0){
+                addressToSave = reusableAddressesData[i];
+                reusableAddressesData[i] = -1;
+                reuse = true;
+                break;
+            }
+        }
+
+        if(!reuse) {
+            writableAddressRekord = writableAddressRekord + rekordSize;
+            return writableAddressRekord - rekordSize;
+        }
+        else
+            return addressToSave;
+    }
+
+    public void addReusableAddressData(int address) {
+        boolean istnieje = false;
+        for (int i : reusableAddressesData){
+            if (i == address)
+                istnieje = true;
+        }
+        if (!istnieje) {
+            for (int i = 0; i < reusableAddressesData.length; i++) {
+                if (reusableAddressesData[i] < 0) {
+                    reusableAddressesData[i] = address;
+                    break;
+                }
+            }
+        }
+    }
+
+    public void addReusableAddressTree(int address) {
+        boolean istnieje = false;
+        for (int i : reusableAddressesTree){
+            if (i == address)
+                istnieje = true;
+        }
+
+        if (!istnieje) {
+            for (int i = 0; i < reusableAddressesTree.length; i++) {
+                if (reusableAddressesTree[i] < 0) {
+                    reusableAddressesTree[i] = address;
+                    break;
+                }
+            }
+        }
     }
 }

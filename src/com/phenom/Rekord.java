@@ -7,6 +7,7 @@ public class Rekord implements Serializable {
 
     int key;
     float liczba1, liczba2, liczba3, liczba4, liczba5;
+    boolean deleted;
 
     Rekord(){
         this.key = -1;
@@ -15,6 +16,7 @@ public class Rekord implements Serializable {
     Rekord(int key){
         this.key = key;
         generateValues();
+        deleted = false;
     }
 
     public int getKey() {
@@ -116,6 +118,7 @@ public class Rekord implements Serializable {
         } catch (Exception e){
             e.printStackTrace();
         }
+        Globals.addZapis();
         return myAddress;
     }
 
@@ -149,6 +152,35 @@ public class Rekord implements Serializable {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+        }
+        Globals.addOdczyt();
+    }
+
+    public void delete(int recordAddress) {
+        this.load(recordAddress);
+        this.deleted = true;
+        this.save(recordAddress);
+        Globals.getTreeHeader().addReusableAddressData(recordAddress);
+    }
+
+    public void save(int address) {
+
+        try  {
+            RandomAccessFile dataFile = new RandomAccessFile(Globals.DATA_FILE, "rw");
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+
+            out.writeObject(this);
+            out.flush();
+            byte[] byteRekord = bos.toByteArray();
+            bos.close();
+            out.close();
+
+            dataFile.seek(address);
+            dataFile.write(byteRekord, 0, Globals.getTreeHeader().getRekordSize());
+            dataFile.close();
+        } catch (Exception e){
+            e.printStackTrace();
         }
     }
 }
